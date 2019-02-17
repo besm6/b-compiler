@@ -424,7 +424,12 @@ case21:
 
   if (o==42) { /* * */
     expr(1);
-    gen_helper('uind'); /* uind */
+    write('   ,'); /* uind */
+    write('ati,');
+    write('14\n');
+    write(' 14,');
+    write('xta,');
+    write('\n');
     goto loop;
   }
 
@@ -941,7 +946,7 @@ gen_goto() {
 
 gen_helper(name) {
   /* call helper routine */
-  write(' 13,');
+  write(' 14,');
   write('vjm,');
   write('b/');
   write(name);
