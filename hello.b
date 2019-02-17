@@ -1,9 +1,6 @@
-main $(
-  write('He');
-  write('ll');
-  write('o,');
-  write(' W');
-  write('or');
-  write('ld');
+main {
+  write('Hell');
+  write('o, W');
+  write('orld');
   write('!*n');
-$)
+}

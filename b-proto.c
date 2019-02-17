@@ -2,9 +2,9 @@
 
    Implemented in a subset of the C language compatible with B.
    Coding style and organization based on lastc1120c.c
- 
+
    (C) 2016 Robert Swierczek, GPL3
- 
+
    To compile hello.b:
       gcc -Wno-multichar b.c -o b
       ./b hello.b hello.s
@@ -42,15 +42,30 @@ xread() {
 }
 
 xwrite(c) {
-  char buf[2];
-  if (c & 0xff00) {
-    buf[0] = (c >> 8) & 0xff;
+  char buf[4];
+  buf[0] = (c >> 24) & 0xff;
+  if (buf[0]) {
+    buf[1] = (c >> 16) & 0xff;
+    buf[2] = (c >> 8) & 0xff;
+    buf[3] = c & 0xff;
+    write(fout, buf, 4);
+    return;
+  }
+  buf[0] = (c >> 16) & 0xff;
+  if (buf[0]) {
+    buf[1] = (c >> 8) & 0xff;
+    buf[2] = c & 0xff;
+    write(fout, buf, 3);
+    return;
+  }
+  buf[0] = (c >> 8) & 0xff;
+  if (buf[0]) {
     buf[1] = c & 0xff;
     write(fout, buf, 2);
-  } else {
-    buf[0] = c & 0xff;
-    write(fout, buf, 1);
+    return;
   }
+  buf[0] = c & 0xff;
+  write(fout, buf, 1);
 }
 
 xflush() {
@@ -61,7 +76,7 @@ xflush() {
 #define flush xflush
 
 main(int argc, char **argv) {
-  extern symtab[], eof, *ns, nerror;
+  extern symtab[], eof, *ns, nerror, nentry;
   extern fin, fout;
 
   if (argc > 1) {
@@ -81,6 +96,11 @@ main(int argc, char **argv) {
     ns = symtab + 51;
     extdef();
     blkend();
+  }
+  if (nentry > 0) {
+    write('   ,');
+    write('end,');
+    write('\n');
   }
   return(nerror!=0);
 }
@@ -139,12 +159,12 @@ symbol() {
   }
 loop:
   ct = ctab[c];
- 
+
   if (ct==0) { /* eof */
     eof = 1;
     return(0);
   }
- 
+
   if (ct==126) { /* white space */
     if (c=='\n')
       line = line+1;
@@ -255,7 +275,13 @@ void getcc() {
   cval = c;
   if ((c = mapch('\'')) < 0)
     return;
-  cval = cval * 512 + c;
+  cval = cval * 256 + c;
+  if ((c = mapch('\'')) < 0)
+    return;
+  cval = cval * 256 + c;
+  if ((c = mapch('\'')) < 0)
+    return;
+  cval = cval * 256 + c;
   if (mapch('\'') >= 0)
     error('cc');
 }
@@ -266,16 +292,16 @@ getstr() {
   i = 1;
 loop:
   if ((c = mapch('"')) < 0) {
-    number(2048);
+    number(1024);
     write('\n');
     return(i);
   }
   if ((d = mapch('"')) < 0) {
-    number(c*512+4);
+    number(c*256+4);
     write('\n');
     return(i);
   }
-  number(c*512+d);
+  number(c*256+d);
   write('\n');
   i = i+1;
   goto loop;
@@ -287,7 +313,7 @@ mapch(c) {
 
   if ((a=read())==c)
     return(-1);
- 
+
   if (a=='\n' | a==0 | a==4) {
     error('cc');
     peekc = a;
@@ -322,36 +348,27 @@ mapch(c) {
 }
 
 void expr(lev) {
-  extern peeksym, *csym, cval, isn;
+  extern peeksym, *csym, cval, isn, retflag;
   auto o;
 
+  retflag = 0;
   o = symbol();
- 
+
   if (o==21) { /* number */
 case21:
-    if ((cval & 017777)==cval) {
-      gen('c',cval); /* consop */
-      goto loop;
-    }
-    gen('n',5); /* litrl */
-    number(cval);
-    write('\n');
+    gen_const(cval);
     goto loop;
   }
 
   if (o==122) { /* string */
-    write('x ');
-    write('.+');
+    write('x .+');
     write('2\n');
-    write('t ');
-    write('2f');
+    write('t 2f');
     write('\n');
-    write('.+');
-    write('1\n');
+    write('.+1\n');
     getstr();
-    write('2:');
-    write('\n');
-    goto loop; 
+    write('2:\n');
+    goto loop;
   }
 
   if (o==20) { /* name */
@@ -365,25 +382,30 @@ case21:
       }
     }
     if (*csym==5) /* auto */
-      gen('a',csym[1]);
-    else {
-      write('x ');
-      if (*csym==6) { /* extrn */
-        write('.');
-        name(csym+2);
-      } else { /* internal */
-        write('1f');
-        write('+');
-        number(csym[1]);
-      }
+      gen_auto(csym[1]);
+    else if (*csym==8) /* param */
+      gen_param(csym[1]);
+    else if (*csym==6) { /* extrn */
+      write('   ,');
+      write('xts,');
+      name(csym+2);
       write('\n');
+    } else { /* internal */
+      write(' 14,');
+      write('vtm,');
+      write('l*');
+      number(csym[1]);
+      write('\n');
+      write('   ,');
+      write('its,');
+      write('14\n');
     }
     goto loop;
   }
- 
+
   if (o==34) { /* ! */
     expr(1);
-    gen('u',4); /* unot */
+    gen_helper('unot'); /* unot */
     goto loop;
   }
 
@@ -395,22 +417,22 @@ case21:
       goto case21;
     }
     expr(1);
-    gen('u',2); /* umin */
+    gen_helper('umin'); /* umin */
     goto loop;
   }
- 
+
   if (o==47) { /* & */
     expr(1);
-    gen('u',1); /* uadr */
+    gen_helper('uadr'); /* uadr */
     goto loop;
   }
- 
+
   if (o==42) { /* * */
     expr(1);
-    gen('u',3); /* uind */
+    gen_helper('uind'); /* uind */
     goto loop;
   }
- 
+
   if (o==6) { /* ( */
     peeksym = o;
     pexpr();
@@ -423,57 +445,95 @@ loop:
 
   if (lev>=14 & o==80) { /* = */
     expr(14);
-    gen('b',1); /* asg */
+    gen_helper('asg'); /* asg */
     goto loop;
   }
   if (lev>=10 & o==48) { /* | ^ */
     expr(9);
-    gen('b',2); /* bor */
+    write(' 15,');
+    write('aox,');
+    write('\n');
     goto loop;
   }
   if (lev>=8 & o==47) { /* & */
     expr(7);
-    gen('b',3); /* band */
+    write(' 15,');
+    write('aax,');
+    write('\n');
     goto loop;
   }
-  if (lev>=7 & o>=60 & o<=61) { /* == != */
+  if (lev>=7 & o==60) { /* == */
     expr(6);
-    gen('b',o-56); /* beq bne */
+    gen_helper('beq'); /* beq */
     goto loop;
   }
-  if (lev>=6 & o>=62 & o<=65) { /* <= < >= > */
+  if (lev>=7 & o==61) { /* != */
+    expr(6);
+    gen_helper('bne'); /* bne */
+    goto loop;
+  }
+  if (lev>=6 & o==62) { /* <= */
     expr(5);
-    gen('b',o-56); /* ble blt bge bgt */
+    gen_helper('ble'); /* ble */
     goto loop;
   }
-  if (lev>=4 & o>=40 & o<=41) { /* + - */
+  if (lev>=6 & o==63) { /* < */
+    expr(5);
+    gen_helper('blt'); /* blt */
+    goto loop;
+  }
+  if (lev>=6 & o==64) { /* >= */
+    expr(5);
+    gen_helper('bge'); /* bge */
+    goto loop;
+  }
+  if (lev>=6 & o==65) { /* > */
+    expr(5);
+    gen_helper('bgt'); /* bgt */
+    goto loop;
+  }
+  if (lev>=4 & o==40) { /* + */
     expr(3);
-    gen('b',o-28); /* badd bmin */
+    write(' 15,');
+    write('a+x,');
+    write('\n');
     goto loop;
   }
-  if (lev>=3 & o>=42 & o<=43) { /* * / */
+  if (lev>=4 & o==41) { /* - */
+    expr(3);
+    write(' 15,');
+    write('x-a,');
+    write('\n');
+    goto loop;
+  }
+  if (lev>=3 & o==42) { /* * */
     expr(2);
-    gen('b',o-27); /* bmul bdiv */
+    gen_helper('bmul'); /* bmul */
+    goto loop;
+  }
+  if (lev>=3 & o==43) { /* / */
+    expr(2);
+    gen_helper('bdiv'); /* bdiv */
     goto loop;
   }
   if (lev>=3 & o==44) { /* % */
     expr(2);
-    gen('b',14); /* bmod */
+    gen_helper('bmod'); /* bmod */
     goto loop;
   }
   if (o==4) { /* [ */
     expr(15);
     if (symbol() != 5)
       error('[]');
-    gen('n',4); /* vector */
+    gen_helper('vect'); /* vector */
     goto loop;
   }
   if (o==6) { /* ( */
     o = symbol();
     if (o==7) /* ) */
-      gen('n',1); /* mcall */
+      gen_mcall();
     else {
-      gen('n',2); /* mark */
+      /*gen_mark();*/
       peeksym = o;
       while (o!=7) {
         expr(15);
@@ -483,11 +543,11 @@ loop:
           return;
         }
       }
-      gen('n',3); /* call */
+      gen_call();
     }
     goto loop;
   }
- 
+
   peeksym = o;
 }
 
@@ -501,20 +561,24 @@ void pexpr() {
 }
 
 void declare(kw) {
-  extern *csym, cval, nauto;
+  extern *csym, cval, nauto, nparam;
   auto o;
 
   while((o=symbol())==20) { /* name */
     if (kw==6) { /* extrn */
       *csym = 6;
       o = symbol();
-    } else { /* auto/param */
+    } else if (kw==8) { /* param */
+      *csym = 8; /* param */
+      csym[1] = nparam;
+      o = symbol();
+      nparam = nparam+1;
+    } else { /* auto */
       *csym = 5; /* auto */
       csym[1] = nauto;
       o = symbol();
-      if (kw==5 & o==21) { /* auto & number */
-        gen('y',nauto); /* aryop */
-        nauto = nauto + cval;
+      if (o==21) { /* number */
+        nauto = nauto + cval; /* vector */
         o = symbol();
       }
       nauto = nauto+1;
@@ -530,7 +594,7 @@ syntax:
 }
 
 void extdef() {
-  extern peeksym, *csym, cval, nauto;
+  extern peeksym, *csym, cval, nauto, nparam, nentry, retflag;
   auto o, c;
 
   o = symbol();
@@ -541,45 +605,63 @@ void extdef() {
     goto syntax;
 
   csym[0] = 6; /* extrn */
-  write('.');
-  name(csym + 2);
-  write(':');
+  if (nentry == 0) {
+    write(' ');
+    name(csym + 2);
+    write(':,na');
+    write('me,\n');
+  } else {
+    write('\n ');
+    name(csym + 2);
+    write(':,en');
+    write('try,');
+    write('\n');
+  }
+  nentry = nentry + 1;
   o=symbol();
- 
-  if (o==2 | o==6) { /* $( ( */
-    write('.+');
-    write('1\n');
-    nauto = 2;
+
+  if (o==2 | o==6) { /* { ( */
+    gen_savstk();
+    nauto = 0;
+    nparam = 0;
     if (o==6) { /* ( */
       declare(8); /* param */
-      if ((o=symbol())!=2) /* $( */
+      if ((o=symbol())!=2) /* { */
         goto syntax;
     }
     while((o=symbol())==19 & cval<10) /* auto extrn */
       declare(cval);
     peeksym = o;
-    gen('s',nauto); /* setop */
+    if (nauto > 0)
+        gen_stackp(nauto); /* setop */
     stmtlist();
-    gen('n',7); /* retrn */
+    if (! retflag)
+        gen_ret(); /* return */
     return;
   }
 
   if (o==41) { /* - */
     if (symbol()!=21) /* number */
       goto syntax;
-    number(-cval);
+    write('   ,');
+    write('oct,');
+    printo(-cval);
     write('\n');
     return;
   }
 
   if (o==21) { /* number */
-    number(cval);
+    write('   ,');
+    write('oct,');
+    printo(cval);
     write('\n');
     return;
   }
 
   if (o==1) { /* ; */
-    write('0\n');
+    write('   ,');
+    write('oct,');
+    write('\n');
     return;
   }
 
@@ -591,8 +673,6 @@ void extdef() {
     }
     if (o!=5) /* ] */
       goto syntax;
-    write('.+');
-    write('1\n');
     if ((o=symbol())==1) /* ; */
       goto done;
     while (o==21 | o==41) { /* number - */
@@ -601,7 +681,9 @@ void extdef() {
           goto syntax;
         cval = -cval;
       }
-      number(cval);
+      write('   ,');
+      write('oct,');
+      printo(cval);
       write('\n');
       c = c-1;
       if ((o=symbol())==1) /* ; */
@@ -614,8 +696,8 @@ void extdef() {
     goto syntax;
 done:
     if (c>0) {
-      write('.=');
-      write('.+');
+      write('   ,');
+      write('bss,');
       number(c);
       write('\n');
     }
@@ -635,16 +717,16 @@ void stmtlist() {
   auto o;
 
   while (!eof) {
-    if ((o = symbol())==3) /* $) */
+    if ((o = symbol())==3) /* } */
       return;
     peeksym = o;
     stmt();
   }
-  error('$)'); /* missing $) */
+  error('}'); /* missing } */
 }
 
 void stmt() {
-  extern peeksym, peekc, *csym, cval, isn, nauto;
+  extern peeksym, peekc, *csym, cval, isn, nauto, retflag;
   auto o, o1, o2;
 
 next:
@@ -654,11 +736,11 @@ next:
     error('fe'); /* Unexpected eof */
     return;
   }
- 
-  if (o==1 | o==3) /* ; $) */
+
+  if (o==1 | o==3) /* ; } */
     return;
- 
-  if (o==2) { /* $( */
+
+  if (o==2) { /* { */
     stmtlist();
     return;
   }
@@ -667,14 +749,15 @@ next:
 
     if (cval==10) { /* goto */
       expr(15);
-      gen('n',6); /* goto */
+      gen_goto(); /* goto */
       goto semi;
     }
 
     if (cval==11) { /* return */
       if ((peeksym=symbol())==6) /* ( */
         pexpr();
-      gen('n',7); /* retrn */
+      gen_ret(); /* return */
+      retflag = 1;
       goto semi;
     }
 
@@ -733,7 +816,7 @@ next:
 
   peeksym = o;
   expr(15);
-  gen('s',nauto); /* setop */
+  gen_stackp(nauto); /* setop */
 
 semi:
   o = symbol();
@@ -751,6 +834,7 @@ void blkend() {
 
   if (!isn)
     return;
+  /* Table of labels is not needed for BESM-6.
   write('1:');
   i = 0;
   while (i < isn) {
@@ -758,44 +842,187 @@ void blkend() {
     number(i);
     write('\n');
     i = i+1;
-  }
+  }*/
   isn = 0;
 }
 
-gen(o,n) {
-  write(o);
-  write(' ');
-  number(n);
+gen_const(n) {
+  write('   ,');
+  write('xts,');
+  write('=c');
+  printo(n);
+  write('\n');
+}
+
+gen_savstk() {
+  /* save old frame pointer */
+  write('   ,');
+  write('its,');
+  write('7\n');
+
+  /* save return address */
+  write('   ,');
+  write('its,');
+  write('13\n');
+  write('   ,');
+  write('its,');
+  write('\n');
+
+  /* set frame pointer */
+  write(' 15,');
+  write('mtj,');
+  write('7\n');
+}
+
+gen_ret() {
+  extern nparam;
+
+  /* set stack pointer */
+  write('  7,');
+  write('mtj,');
+  write('15\n');
+
+  /* restore return address and old stack pointer */
+  write('  7,');
+  write('stx,');
+  write('-3\n');
+  write('   ,');
+  write('sti,');
+  write('13\n');
+  write('   ,');
+  write('sti,');
+  write('7\n');
+  if (nparam > 0) {
+    write(' 15,');
+    write('utm,');
+    number(-nparam);
+    write('\n');
+  }
+  write(' 13,');
+  write('uj,\n');
+}
+
+gen_stackp(n) {
+  /* set stack pointer, allocate space for auto variables */
+  if (n == 0) {
+    write('  7,');
+    write('mtj,');
+    write('15\n');
+  } else {
+    write('  7,');
+    write('utc,');
+    write('\n');
+    write(' 15,');
+    write('vtm,');
+    number(n);
+    write('\n');
+  }
+}
+
+gen_mcall() {
+  /* call without parameters */
+  write(' 13,');
+  write('vjm,');
+  /* TODO: name */
+  write('\n');
+}
+
+gen_call() {
+  /* call with parameters */
+  write(' 13,');
+  write('vjm,');
+  /* TODO: name */
+  write('\n');
+}
+
+gen_goto() {
+  write('   ,');
+  write('sti,');
+  write('14\n');
+  write(' 14,');
+  write('uj,');
+  write('\n');
+}
+
+gen_helper(name) {
+  /* call helper routine */
+  write(' 13,');
+  write('vjm,');
+  write('b/');
+  write(name);
+  write('\n');
+}
+
+gen_auto(offset) {
+  /* read auto variable */
+  write('  7,');
+  write('xts,');
+  number(offset);
+  write('\n');
+}
+
+gen_param(offset) {
+  /* read function parameter */
+  extern nparam;
+  write('  7,');
+  write('xts,');
+  number(offset-nparam-2);
   write('\n');
 }
 
 jumpc(n) {
-  write('f '); /* ifop */
-  write('1f');
-  write('+');
+  write('   ,'); /* ifop */
+  write('uza,');
+  write('l*');
   number(n);
   write('\n');
 }
 
 jump(n) {
-  write('x ');
-  write('1f');
-  write('+');
+  write('   ,');
+  write('uj, ');
+  write('l*');
   number(n);
-  gen('\nn',6); /* goto */
+  write('\n');
 }
 
 label(n) {
-  write('l');
+  write(' l*');
   number(n);
-  write('=.');
-  write('\n');
+  write(':,bs');
+  write('s,\n');
 }
 
 printn(n) {
   if (n > 9) {
     printn(n / 10);
     n = n % 10;
+  }
+  write(n + '0');
+}
+
+printo(n) {
+  if (n < 0) {
+    /* print 30 bits */
+    write('7777');
+    write(' 77');
+    write('0' + ((n >> 27) & 7));
+    write('0' + ((n >> 24) & 7));
+    write(' ');
+    write('0' + ((n >> 21) & 7));
+    write('0' + ((n >> 18) & 7));
+    write('0' + ((n >> 15) & 7));
+    write('0' + ((n >> 12) & 7));
+    write(' ');
+    write('0' + ((n >> 9) & 7));
+    write('0' + ((n >> 6) & 7));
+    write('0' + ((n >> 3) & 7));
+    write('0' + (n & 7));
+    return;
+  }
+  if (n > 7) {
+    printo(n >> 3);
+    n = n & 7;
   }
   write(n + '0');
 }
@@ -879,3 +1106,6 @@ int cval;
 int isn;
 int nerror;
 int nauto;
+int nparam;
+int nentry;
+int retflag;
