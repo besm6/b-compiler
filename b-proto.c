@@ -1,17 +1,12 @@
-/* b.c - B compiler for PDP-7 Unix
-
-   Implemented in a subset of the C language compatible with B.
-   Coding style and organization based on lastc1120c.c
-
-   (C) 2016 Robert Swierczek, GPL3
-
-   To compile hello.b:
-      gcc -Wno-multichar b.c -o b
-      ./b hello.b hello.s
-      perl as7 --out a.out bl.s hello.s bi.s
-      perl a7out a.out
-*/
-
+/*
+ * b.c - B compiler for BESM-6
+ *
+ * Implemented in a subset of the C language compatible with B.
+ * Based on B compiler for PDP-7 Unix by Robert Swierczek.
+ *
+ * (C) 2016 Robert Swierczek, GPL3
+ * (C) 2018 Serge Vakulenko
+ */
 #ifdef _WIN32
 #include <io.h>
 #else
