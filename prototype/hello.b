@@ -1,6 +1,7 @@
-main {
-  write('Hell');
-  write('o, W');
-  write('orld');
-  write('!*n');
+main() {
+  extrn putchar;
+
+  putchar('Hello,');
+  putchar(' World');
+  putchar('!*n');
 }
