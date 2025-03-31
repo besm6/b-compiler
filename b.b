@@ -20,7 +20,7 @@
 */
 
 main() {
-  extrn symtab, eof, ns;
+  extrn symtab, eof, ns, extdef, blkend;
 
   while (!eof) {
     ns = symtab + 51;
@@ -30,7 +30,7 @@ main() {
 }
 
 lookup() {
-  extrn symtab, symbuf, eof, ns;
+  extrn symtab, symbuf, eof, ns, error;
   auto np, sp, rp;
 
   rp = symtab;
@@ -65,7 +65,7 @@ lookup() {
 }
 
 symbol() {
-  extrn symbuf, ctab, peeksym, peekc, eof, line, csym, cval;
+  extrn symbuf, ctab, peeksym, peekc, eof, line, csym, cval, read, subseq, error, getcc, lookup;
   auto b, c, ct, sp;
 
   if (peeksym>=0) {
@@ -179,7 +179,7 @@ com1:
 }
 
 subseq(c,a,b) {
-  extrn peekc;
+  extrn peekc, read;
 
   if (!peekc)
     peekc = read();
@@ -190,7 +190,7 @@ subseq(c,a,b) {
 }
 
 getcc() {
-  extrn cval;
+  extrn cval, mapch, error;
   auto c;
 
   cval = 0;
@@ -205,6 +205,7 @@ getcc() {
 }
 
 getstr() {
+  extrn mapch, number, write;
   auto i, c, d;
 
   i = 1;
@@ -226,7 +227,7 @@ loop:
 }
 
 mapch(c) {
-  extrn peekc;
+  extrn peekc, read, error;
   auto a;
 
   if ((a=read())==c)
@@ -266,7 +267,7 @@ mapch(c) {
 }
 
 expr(lev) {
-  extrn peeksym, csym, cval, isn;
+  extrn peeksym, csym, cval, isn, symbol, gen, number, write, getstr, name, pexpr, error;
   auto o;
 
   o = symbol();
@@ -436,6 +437,8 @@ loop:
 }
 
 pexpr() {
+  extrn symbol, expr, error;
+
   if (symbol()==6) { /* ( */
     expr(15);
     if (symbol()==7) /* ) */
@@ -445,7 +448,7 @@ pexpr() {
 }
 
 declare(kw) {
-  extrn csym, cval, nauto;
+  extrn csym, cval, nauto, symbol, gen;
   auto o;
 
   while((o=symbol())==20) { /* name */
