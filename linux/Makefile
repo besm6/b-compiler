@@ -1,0 +1,40 @@
+SHELL = /bin/sh
+
+CFLAGS = -std=c99 -Wall -Wextra -pedantic -fPIC -g
+CFLAGS_LIBB = -nostdlib -c 					\
+	-Wno-incompatible-library-redeclaration \
+	-Wno-builtin-declaration-mismatch       \
+	-ffreestanding
+
+COMPILER_FILES = compiler.c  list.c  main.c
+LIBB_FILES = libb.c
+
+LIBB_BIN = libb.a
+BCAUSE_EXEC = bcause
+
+BINDIR = ${SYSROOT}/bin
+LIBDIR = ${SYSROOT}/lib64
+
+.PHONY: all
+all: ${BCAUSE_EXEC} ${LIBB_BIN}
+
+.PHONY: install
+install: all
+	install ${LIBB_BIN} ${LIBDIR}/${LIBB_BIN}
+	install -m 557 ${BCAUSE_EXEC} ${BINDIR}/${BCAUSE_EXEC}
+
+${BCAUSE_EXEC}:
+	${CC} ${CFLAGS} ${COMPILER_FILES} -o $@
+
+.PHONY: libb
+libb: libb.a
+${LIBB_BIN}: libb.o
+	ar ruv $@ $<
+	ranlib $@
+
+libb.o:
+	${CC} ${CFLAGS} ${CFLAGS_LIBB} ${LIBB_FILES} -o $@
+
+.PHONY: clean
+clean:
+	rm -rf *.o *.a *.out ${BCAUSE_EXEC}
