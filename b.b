@@ -842,19 +842,3 @@ cval;
 isn;
 nerror;
 nauto;
-
-/* runtime library */
-fout;
-
-write(c) {
-  /*todo: write several characters to stdout or stderr, based on fout*/
-}
-
-read() {
-  /*todo*/
-  return(0);
-}
-
-flush() {
-  /*empty*/
-}
