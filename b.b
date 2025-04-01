@@ -448,7 +448,7 @@ pexpr() {
 }
 
 declare(kw) {
-  extrn csym, cval, nauto, symbol, gen;
+  extrn csym, cval, nauto, symbol, gen, error;
   auto o;
 
   while((o=symbol())==20) { /* name */
@@ -477,7 +477,7 @@ syntax:
 }
 
 extdef() {
-  extrn peeksym, csym, cval, nauto;
+  extrn peeksym, csym, cval, nauto, symbol, write, name, declare, gen, stmtlist, number, error, stmt;
   auto o, c;
 
   o = symbol();
@@ -578,7 +578,7 @@ syntax:
 }
 
 stmtlist() {
-  extrn peeksym, eof;
+  extrn peeksym, eof, symbol, stmt, error;
   auto o;
 
   while (!eof) {
@@ -591,7 +591,7 @@ stmtlist() {
 }
 
 stmt() {
-  extrn peeksym, peekc, csym, cval, isn, nauto;
+  extrn peeksym, peekc, csym, cval, isn, nauto, symbol, error, stmtlist, expr, gen, pexpr, jumpc, jump, label;
   auto o, o1, o2;
 
 next:
@@ -693,7 +693,7 @@ syntax:
 }
 
 blkend() {
-  extrn isn;
+  extrn isn, write, number;
   auto i;
 
   if (!isn)
@@ -710,6 +710,8 @@ blkend() {
 }
 
 gen(o,n) {
+  extrn write, number;
+
   write(o);
   write(' ');
   number(n);
@@ -717,6 +719,8 @@ gen(o,n) {
 }
 
 jumpc(n) {
+  extrn write, number;
+
   write('f '); /* ifop */
   write('1f');
   write('+');
@@ -725,6 +729,8 @@ jumpc(n) {
 }
 
 jump(n) {
+  extrn write, number, gen;
+
   write('x ');
   write('1f');
   write('+');
@@ -733,6 +739,8 @@ jump(n) {
 }
 
 label(n) {
+  extrn write, number;
+
   write('l');
   number(n);
   write('=.');
@@ -740,6 +748,8 @@ label(n) {
 }
 
 printn(n) {
+  extrn write;
+
   if (n > 9) {
     printn(n / 10);
     n = n % 10;
@@ -748,6 +758,8 @@ printn(n) {
 }
 
 number(x) {
+  extrn write, printn;
+
   if (x < 0) {
     write('-');
     x = -x;
@@ -756,6 +768,8 @@ number(x) {
 }
 
 name(s) {
+  extrn write;
+
   while (*s) {
     write(*s);
     s = s+1;
@@ -763,7 +777,7 @@ name(s) {
 }
 
 error(code) {
-  extrn line, eof, csym, nerror, fout;
+  extrn line, eof, csym, nerror, fout, write, printn, flush, name;
   auto f;
 
   if (eof | nerror==20) {

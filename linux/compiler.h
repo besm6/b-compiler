@@ -5,7 +5,7 @@
 #include "list.h"
 
 #define A_OUT "a.out"
-#define A_S   "a.S"
+#define A_S   "a.s"
 #define A_O   "a.o"
 
 #define COLOR_RESET      "\033[0m"

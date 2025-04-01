@@ -380,6 +380,13 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
         string(args, in);
         fprintf(out, "  .quad .string.%lu\n", args->strings.size - 1);
     }
+    else if(c == '-') {
+        if((value = number(args, in)) == EOF) {
+            eprintf(args->arg0, "unexpected end of file, expect ival\n");
+            exit(1);
+        }
+        fprintf(out, "  .quad %lu\n", -value);
+    }
     else {
         ungetc(c, in);
         if((value = number(args, in)) == EOF) {
