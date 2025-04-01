@@ -113,7 +113,7 @@ void B_FN(lchar)(B_TYPE string, B_TYPE i, B_TYPE chr) {
 // The character ‘*e’ is returned for an end-of-file.
 //
 B_TYPE B_FN(read)(void) {
-    unsigned char c = 0;
+    B_TYPE c = 0;
     if (syscall3(SYS_read, 0, (B_TYPE)&c, 1) == 1) {
         if (c > 0 && c <= 127) {
             return c;
@@ -140,9 +140,17 @@ B_TYPE B_FN(nread)(B_TYPE file, B_TYPE buffer, B_TYPE count) {
 //
 B_TYPE fout = 0;
 
-void B_FN(write)(B_TYPE chr) {
-    //TODO
-    syscall3(SYS_write, fout + 1, (B_TYPE)&chr, sizeof(B_TYPE));
+void B_FN(write)(B_TYPE word) {
+    union {
+        B_TYPE word;
+        char c[sizeof(B_TYPE)];
+    } u;
+    unsigned len = sizeof(B_TYPE);
+
+    u.word = word;
+    while (len > 1 && u.c[len-1] == 0)
+        len--;
+    syscall3(SYS_write, fout + 1, (B_TYPE)&u, len);
 }
 
 /* Count bytes are written out of the vector buffer on the
