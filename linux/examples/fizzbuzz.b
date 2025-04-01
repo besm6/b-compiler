@@ -7,18 +7,18 @@
 n 100;
 
 main() {
-    extrn printn, putchar, n;
+    extrn printn, write, n;
     auto i;
 
     while(i++ < n) {
         if(0 == i % 15)
-            putchar('FizzBuzz');
+            write('FizzBuzz');
         else if(0 == i % 3)
-            putchar('Fizz');
+            write('Fizz');
         else if(0 == i % 5)
-            putchar('Buzz');
+            write('Buzz');
         else
             printn(i, 10);
-        putchar('*n');
+        write('*n');
     }
 }

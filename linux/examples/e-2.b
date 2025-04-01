@@ -6,7 +6,7 @@
    where the bases of the digits are 2, 3, 4, . . . */
 
 main() {
-	extrn putchar, n, v;
+	extrn write, n, v;
 	auto i, c, col, a;
 
 	i = col = 0;
@@ -21,11 +21,11 @@ main() {
 			c =/ a--;
 		}
 
-		putchar(c + '0');
+		write(c + '0');
 		if(!(++col % 5))
-			putchar(col % 50 ? ' ' : '*n');
+			write(col % 50 ? ' ' : '*n');
 	}
-	putchar('*n*n');
+	write('*n*n');
 }
 v[2000];
 n 2000;
