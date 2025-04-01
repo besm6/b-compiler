@@ -385,7 +385,7 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
-        fprintf(out, "  .quad %lu\n", -value);
+        fprintf(out, "  .quad -%lu\n", value);
     }
     else {
         ungetc(c, in);
