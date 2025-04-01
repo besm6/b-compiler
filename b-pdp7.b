@@ -4,19 +4,15 @@
 
    (C) 2016 Robert Swierczek, GPL3
 
-   To compile the compiler with b.c:
-      gcc -Wno-multichar b.c -o b
-      ./b b.b b.s
-      perl as7 --out b.out bl.s b.s bi.s
+   To compile the compiler with bcause:
+      make -C linux install
+      bcause b-pdp7.b -o b.out
 
    To compile hello.b:
-      perl a7out b.out hello.b hello.s
-      perl as7 --out h.out bl.s hello.s bi.s
-      perl a7out h.out
+      b.out < examples/hello.b > hello.s
 
    To compile the compiler with itself:
-      perl a7out b.out b.b b2.s
-      perl as7 --out b2.out bl.s b2.s bi.s
+      b.out < b-pdp7.b > b.s
 */
 
 main() {
