@@ -3,3 +3,4 @@ bcause
 *.s
 *.a
 *.o
+*.out

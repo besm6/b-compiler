@@ -915,7 +915,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     eprintf(args->arg0, "expect label name after " QUOTE_FMT("goto") "\n");
                     exit(1);
                 }
-                fprintf(out, "  jmp .L.label.%s\n", buffer);
+                fprintf(out, "  jmp .L.label.%s.%s\n", buffer, fn_ident);
                 whitespace(args, in);
                 ASSERT_CHAR(args, in, ';', "expect " QUOTE_FMT(";") " after " QUOTE_FMT("goto") " statement\n");
                 return;
@@ -1128,7 +1128,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
             else {
                 switch(c = fgetc(in)) {
                 case ':': /* label */
-                    fprintf(out, ".L.label.%s:\n", buffer);
+                    fprintf(out, ".L.label.%s.%s:\n", buffer, fn_ident);
                     statement(args, in, out, fn_ident, switch_id, cases);
                     return;
                 default:

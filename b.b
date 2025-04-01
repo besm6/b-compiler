@@ -747,6 +747,7 @@ label(n) {
   write('*n');
 }
 
+/*
 printn(n) {
   extrn write;
 
@@ -756,6 +757,7 @@ printn(n) {
   }
   write(n + '0');
 }
+*/
 
 number(x) {
   extrn write, printn;
@@ -840,3 +842,19 @@ cval;
 isn;
 nerror;
 nauto;
+
+/* runtime library */
+fout;
+
+write(c) {
+  /*todo: write several characters to stdout or stderr, based on fout*/
+}
+
+read() {
+  /*todo*/
+  return(0);
+}
+
+flush() {
+  /*empty*/
+}
