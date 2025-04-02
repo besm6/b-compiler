@@ -1,7 +1,11 @@
 b
+b-c
 bcause
 *.s
 *.a
 *.o
 *.out
 *.dSYM
+*.dis
+*.nm
+*.trace
