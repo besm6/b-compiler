@@ -21,25 +21,10 @@
 /* type used for syscalls */
 #define SYSCALL_TYPE long
 
-static inline SYSCALL_TYPE syscall0(SYSCALL_TYPE n)
-{
-	unsigned SYSCALL_TYPE ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n) : "rcx", "r11", "memory");
-	return ret;
-}
-
 static inline SYSCALL_TYPE syscall1(SYSCALL_TYPE n, SYSCALL_TYPE a1)
 {
 	unsigned SYSCALL_TYPE ret;
 	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1) : "rcx", "r11", "memory");
-	return ret;
-}
-
-static inline SYSCALL_TYPE syscall2(SYSCALL_TYPE n, SYSCALL_TYPE a1, SYSCALL_TYPE a2)
-{
-	unsigned SYSCALL_TYPE ret;
-	__asm__ __volatile__ ("syscall" : "=a"(ret) : "a"(n), "D"(a1), "S"(a2)
-						  : "rcx", "r11", "memory");
 	return ret;
 }
 
@@ -223,6 +208,6 @@ end:
     va_end(ap);
 }
 
-void B_FN(flush)() {
+void B_FN(flush)(void) {
     // Empty.
 }

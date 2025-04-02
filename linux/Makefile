@@ -1,7 +1,5 @@
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -fPIC -g
-CFLAGS_LIBB = -nostdlib -ffreestanding \
-	-Wno-incompatible-library-redeclaration \
-	-Wno-builtin-declaration-mismatch
+CFLAGS_LIBB = -nostdlib -ffreestanding
 
 PROG = bcause
 SRC = compiler.c  list.c  main.c

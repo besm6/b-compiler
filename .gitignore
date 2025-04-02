@@ -4,3 +4,4 @@ bcause
 *.a
 *.o
 *.out
+*.dSYM
