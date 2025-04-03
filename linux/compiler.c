@@ -756,7 +756,10 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '!': /* not operator */
-        primary_expression(args, in, out);
+        if(primary_expression(args, in, out)) {
+            /* fetch rvalue */
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        }
         fprintf(out, "  cmp $0, %%rax\n  sete %%al\n  movzx %%al, %%rax\n");
         break;
 
@@ -771,7 +774,10 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         }
         else { /* negation operator */
             ungetc(c, in);
-            primary_expression(args, in, out);
+            if(primary_expression(args, in, out)) {
+                /* fetch rvalue */
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            }
             fprintf(out, "  neg %%rax\n");
         }
         break;
