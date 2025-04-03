@@ -17,10 +17,10 @@
 
 #define ASSERT_CHAR(args, in, expect, ...) do {     \
     char _c;                                        \
-    if((_c = fgetc(in)) != expect) {                \
+    if ((_c = fgetc(in)) != expect) {               \
         eprintf(args->arg0, __VA_ARGS__);           \
         exit(1);                                    \
-    }} while(0)
+    }} while (0)
 
 #define MAX_FN_CALL_ARGS 6
 
@@ -56,14 +56,22 @@ struct stack_var {
     unsigned long offset;
 };
 
-inline static struct stack_var* init_stack_var(const char* name, unsigned long offset) {
+//
+// Allocate structure for a stack variable.
+//
+inline static struct stack_var* init_stack_var(const char* name, unsigned long offset)
+{
     struct stack_var* ptr = (struct stack_var*) malloc(sizeof(struct stack_var));
     ptr->name = strdup(name);
     ptr->offset = offset;
     return ptr;
 }
 
-inline static void free_stack_var(struct stack_var* ptr) {
+//
+// Deallocate a stack variable structure.
+//
+inline static void free_stack_var(struct stack_var* ptr)
+{
     free(ptr->name);
     free(ptr);
 }
@@ -73,6 +81,9 @@ static inline bool rvalue(struct compiler_args *args, FILE *in, FILE *out);
 static void declarations(struct compiler_args *args, FILE *in, FILE *buffer);
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg);
 
+//
+// Print message with prefix "error:".
+//
 #ifdef __GNUC__
 __attribute((format(printf, 2, 3)))
 #endif
@@ -85,6 +96,9 @@ void eprintf(const char *arg0, const char *fmt, ...)
     va_end(ap);
 }
 
+//
+// Concatenate two strings into a dynamically allocated buffer.
+//
 char *concat(const char *a, const char *b)
 {
     unsigned len = strlen(a) + strlen(b) + 1;
@@ -98,6 +112,9 @@ char *concat(const char *a, const char *b)
     return result;
 }
 
+//
+// Run compiler with given arguments.
+//
 int compile(struct compiler_args *args)
 {
     // create a buffer for the assembly code
@@ -110,10 +127,10 @@ int compile(struct compiler_args *args)
     int exit_code;
 
     // open every provided `.b` file and generate assembly for it
-    for(i = 0; i < (size_t) args->num_input_files; i++) {
+    for (i = 0; i < (size_t) args->num_input_files; i++) {
         len = strlen(args->input_files[i]);
-        if(len >= 2 && args->input_files[i][len - 1] == 'b' && args->input_files[i][len - 2] == '.') {
-            if(!(in = fopen(args->input_files[i], "r"))) {
+        if (len >= 2 && args->input_files[i][len - 1] == 'b' && args->input_files[i][len - 2] == '.') {
+            if (!(in = fopen(args->input_files[i], "r"))) {
                 eprintf(args->arg0, "%s: %s\ncompilation terminated.\n", args->input_files[i], strerror(errno));
                 return 1;
             }
@@ -124,7 +141,7 @@ int compile(struct compiler_args *args)
 
     // write the buffer to an assembly file
     fclose(buffer);
-    if(!(out = fopen(asm_file, "w"))) {
+    if (!(out = fopen(asm_file, "w"))) {
         eprintf(args->arg0, "cannot open file " QUOTE_FMT("%s") " %s.", A_S, strerror(errno));
         return 1;
     }
@@ -132,8 +149,8 @@ int compile(struct compiler_args *args)
     fclose(out);
     free(buf);
 
-    if(args->do_assembling) {
-        if((exit_code = subprocess(args->arg0, "as", (char *const[]){
+    if (args->do_assembling) {
+        if ((exit_code = subprocess(args->arg0, "as", (char *const[]){
             "as",
             asm_file,
             "-o", obj_file,
@@ -143,12 +160,12 @@ int compile(struct compiler_args *args)
             return 1;
         }
 
-        if(!args->save_temps)
+        if (!args->save_temps)
             remove(asm_file);
     }
 
-    if(args->do_linking) {
-        if((exit_code = subprocess(args->arg0, "ld", (char *const[]){
+    if (args->do_linking) {
+        if ((exit_code = subprocess(args->arg0, "ld", (char *const[]){
             "ld",
             "-static", "-nostdlib",
             obj_file,
@@ -162,13 +179,18 @@ int compile(struct compiler_args *args)
             return 1;
         }
 
-        if(!args->save_temps)
+        if (!args->save_temps)
             remove(obj_file);
     }
 
     return 0;
 }
 
+//
+// Execute a program as a sub-process.
+// Wait for completion.
+// Return error status.
+//
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
 {
     fprintf(stdout, "%s", p_name);
@@ -180,20 +202,20 @@ static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
 
     pid_t pid = fork();
 
-    if(pid < 0)
+    if (pid < 0)
     {
         eprintf(arg0, "error forking parent process " QUOTE_FMT("%s") "\n", arg0);
         exit(1);
     }
 
-    if(pid == 0 && execvp(p_name, p_arg) == -1)
+    if (pid == 0 && execvp(p_name, p_arg) == -1)
     {
         eprintf(arg0, "error executing " QUOTE_FMT("%s") ": %s\n", p_name, strerror(errno));
         exit(1);
     }
 
     int pid_status;
-    if(waitpid(pid, &pid_status, 0) == -1)
+    if (waitpid(pid, &pid_status, 0) == -1)
     {
         eprintf(arg0, "error getting status of child process %d\n", pid);
         exit(1);
@@ -202,12 +224,17 @@ static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
     return WEXITSTATUS(pid_status);
 }
 
-static inline void comment(struct compiler_args *args, FILE *in) {
+//
+// Parse a comment.
+// It starts with /* and finishes with */.
+//
+static inline void comment(struct compiler_args *args, FILE *in)
+{
     char c;
 
-    while((c = fgetc(in)) != EOF) {
-        if(c == '*') {
-            if((c = fgetc(in)) == '/')
+    while ((c = fgetc(in)) != EOF) {
+        if (c == '*') {
+            if ((c = fgetc(in)) == '/')
                 return;
             ungetc(c, in);
         }
@@ -217,14 +244,18 @@ static inline void comment(struct compiler_args *args, FILE *in) {
     exit(1);
 }
 
-static void whitespace(struct compiler_args *args, FILE *in) {
+//
+// Skip whitespace characters and comments.
+//
+static void whitespace(struct compiler_args *args, FILE *in)
+{
     char c;
-    while((c = fgetc(in)) != EOF) {
-        if(isspace(c))
+    while ((c = fgetc(in)) != EOF) {
+        if (isspace(c))
             continue;
 
-        if(c == '/') {
-            if((c = fgetc(in)) == '*') {
+        if (c == '/') {
+            if ((c = fgetc(in)) == '*') {
                 comment(args, in);
                 continue;
             }
@@ -239,6 +270,10 @@ static void whitespace(struct compiler_args *args, FILE *in) {
     }
 }
 
+//
+// Parse an identifier.
+// It may include alphanumeric characters or underscore.
+//
 static int identifier(struct compiler_args *args, FILE *in, char* buffer)
 {
     int read = 0;
@@ -246,8 +281,8 @@ static int identifier(struct compiler_args *args, FILE *in, char* buffer)
 
     whitespace(args, in);
 
-    while((c = fgetc(in)) != EOF) {
-        if(!isalpha(c) && !isalnum(c) && c != '_') {
+    while ((c = fgetc(in)) != EOF) {
+        if (!isalpha(c) && !isalnum(c) && c != '_') {
             ungetc(c, in);
             buffer[read] = '\0';
             return read;
@@ -258,14 +293,18 @@ static int identifier(struct compiler_args *args, FILE *in, char* buffer)
     return read;
 }
 
-static intptr_t number(struct compiler_args *args, FILE *in) {
+//
+// Parse an integer literal, possibly empty.
+//
+static intptr_t number(struct compiler_args *args, FILE *in)
+{
     int read = 0;
     char c;
     intptr_t num = 0;
 
     whitespace(args, in);
-    while((c = fgetc(in)) != EOF) {
-        if(!isdigit(c)) {
+    while ((c = fgetc(in)) != EOF) {
+        if (!isdigit(c)) {
             ungetc(c, in);
             return num;
         }
@@ -274,23 +313,27 @@ static intptr_t number(struct compiler_args *args, FILE *in) {
         num += (c - '0');
     }
 
-    if(read == 0)
+    if (read == 0)
         return EOF;
     return num;
 }
 
-static intptr_t character(struct compiler_args *args, FILE *in) {
+//
+// Parse a multi-character literal.
+//
+static intptr_t character(struct compiler_args *args, FILE *in)
+{
     char c = 0;
     int i;
     intptr_t value = 0;
 
-    for(i = 0; i < args->word_size; i++) {
-        if((c = fgetc(in)) == '\'') {
+    for (i = 0; i < args->word_size; i++) {
+        if ((c = fgetc(in)) == '\'') {
             return value;
         }
 
-        if(c == '*') {
-            switch(c = fgetc(in)) {
+        if (c == '*') {
+            switch (c = fgetc(in)) {
             case '0':
             case 'e':
                 c = '\0';
@@ -320,7 +363,7 @@ static intptr_t character(struct compiler_args *args, FILE *in) {
         value |= ((uintptr_t) (uint8_t) c) << (i * 8);
     }
 
-    if(fgetc(in) != '\'') {
+    if (fgetc(in) != '\'') {
         eprintf(args->arg0, "unclosed char literal\n");
         exit(1);
     }
@@ -328,15 +371,19 @@ static intptr_t character(struct compiler_args *args, FILE *in) {
     return value;
 }
 
-static void string(struct compiler_args *args, FILE *in) {
+//
+// Parse a string literal.
+//
+static void string(struct compiler_args *args, FILE *in)
+{
     char c;
     size_t alloc = 32;
     size_t size = 0;
     char *string = (char*) calloc(alloc, sizeof(char));
 
-    while((c = fgetc(in)) != '"') {
-        if(c == '*') {
-            switch(c = fgetc(in)) {
+    while ((c = fgetc(in)) != '"') {
+        if (c == '*') {
+            switch (c = fgetc(in)) {
             case '0':
             case 'e':
                 c = '\0';
@@ -358,46 +405,54 @@ static void string(struct compiler_args *args, FILE *in) {
                 exit(1);
             }
         }
-        else if(c == EOF) {
+        else if (c == EOF) {
             eprintf(args->arg0, "unterminated string literal");
             exit(1);
         }
         string[size] = c;
         size++;
-        if(size >= alloc)
+        if (size >= alloc)
             string = (char*) realloc(string, (alloc *= 2) * sizeof(char));
     }
 
     list_push(&args->strings, string);
 }
 
+//
+// Parse one initialization value.
+// It can be:
+//      integer literal
+//      negative integer literal
+//      'char'
+//      "string"
+//
 static void ival(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
     intptr_t value;
     char c = fgetc(in);
 
-    if(isalpha(c)) {
+    if (isalpha(c)) {
         ungetc(c, in);
-        if(identifier(args, in, buffer) == EOF) {
+        if (identifier(args, in, buffer) == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
         fprintf(out, "  .quad %s\n", buffer);
     }
-    else if(c == '\'') {
-        if((value = character(args, in)) == EOF) {
+    else if (c == '\'') {
+        if ((value = character(args, in)) == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
         fprintf(out, "  .quad %lu\n", value);
     }
-    else if(c == '\"') {
+    else if (c == '\"') {
         string(args, in);
         fprintf(out, "  .quad .string.%lu\n", args->strings.size - 1);
     }
-    else if(c == '-') {
-        if((value = number(args, in)) == EOF) {
+    else if (c == '-') {
+        if ((value = number(args, in)) == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
@@ -405,7 +460,7 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
     }
     else {
         ungetc(c, in);
-        if((value = number(args, in)) == EOF) {
+        if ((value = number(args, in)) == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
@@ -413,6 +468,10 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
     }
 }
 
+//
+// Parse declaration of a global scalar variable.
+// An optional initialization list can be present.
+//
 static void global(struct compiler_args *args, FILE *in, FILE *out, char *identifier)
 {
     fprintf(out,
@@ -424,15 +483,15 @@ static void global(struct compiler_args *args, FILE *in, FILE *out, char *identi
     );
 
     char c;
-    if((c = fgetc(in)) != ';') {
+    if ((c = fgetc(in)) != ';') {
         ungetc(c, in);
         do {
             whitespace(args, in);
             ival(args, in, out);
             whitespace(args, in);
-        } while((c = fgetc(in)) == ',');
+        } while ((c = fgetc(in)) == ',');
 
-        if(c != ';') {
+        if (c != ';') {
             eprintf(args->arg0, "expect " QUOTE_FMT(";") " at end of declaration\n");
             exit(1);
         }
@@ -441,22 +500,26 @@ static void global(struct compiler_args *args, FILE *in, FILE *out, char *identi
         fprintf(out, "  .zero %d\n", args->word_size);
 }
 
+//
+// Parse declaration of a global array.
+// An optional initialization list can be present.
+//
 static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identifier)
 {
     intptr_t num = 0;
     char c;
 
     whitespace(args, in);
-    if((c = fgetc(in)) != ']') {
+    if ((c = fgetc(in)) != ']') {
         ungetc(c, in);
         num = number(args, in);
-        if(num == EOF) {
+        if (num == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect vector size after " QUOTE_FMT("[") "\n");
             exit(1);
         }
         whitespace(args, in);
 
-        if(fgetc(in) != ']') {
+        if (fgetc(in) != ']') {
             eprintf(args->arg0, "expect " QUOTE_FMT("]") " after vector size\n");
             exit(1);
         }
@@ -471,23 +534,26 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
 
     whitespace(args, in);
 
-    if((c = fgetc(in)) != ';') {
+    if ((c = fgetc(in)) != ';') {
         ungetc(c, in);
         do {
             whitespace(args, in);
             ival(args, in, out);
             whitespace(args, in);
-        } while((c = fgetc(in)) == ',');
+        } while ((c = fgetc(in)) == ',');
 
-        if(c != ';') {
+        if (c != ';') {
             eprintf(args->arg0, "expect " QUOTE_FMT(";") " at end of declaration\n");
             exit(1);
         }
     }
-    else if((args->word_size * num) != 0)
+    else if ((args->word_size * num) != 0)
         fprintf(out, "  .zero %ld\n", args->word_size * num);
 }
 
+//
+// Generate code for a comparison operation.
+//
 static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op)
 {
     fprintf(out, "  push %%rax\n");
@@ -501,8 +567,12 @@ static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_o
     );
 }
 
-static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
-    switch(c) {
+//
+// Parse binary operation.
+//
+static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c)
+{
+    switch (c) {
     case '+': /* addition operator */
     case '-': /* subtraction operator */
     case '*': /* multiplication operator */
@@ -516,12 +586,12 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
         fprintf(out, "  push %%rax\n");
         rvalue(args, in, out);
         fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-        if(c == '%')
+        if (c == '%')
             fprintf(out, "  mov %%rdx, %%rax\n");
         break;
 
     case '<':
-        switch(c = fgetc(in)) {
+        switch (c = fgetc(in)) {
         case '<': /* shift-left operator */
             fprintf(out, "  push %%rax\n");
             rvalue(args, in, out);
@@ -537,7 +607,7 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
         break;
 
     case '>':
-        switch(c = fgetc(in)) {
+        switch (c = fgetc(in)) {
         case '>': /* shift-right-operator */
             fprintf(out, "  push %%rax\n");
             rvalue(args, in, out);
@@ -553,7 +623,7 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
         break;
 
     case '!': /* inequality operator */
-        if((c = fgetc(in)) != '=') {
+        if ((c = fgetc(in)) != '=') {
             eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c);
             exit(1);
         }
@@ -561,7 +631,7 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
         break;
 
     case '=': /* equality operator */
-        if((c = fgetc(in)) != '=') {
+        if ((c = fgetc(in)) != '=') {
             eprintf(args->arg0, "unknown operator " QUOTE_FMT("=%c") "\n", c);
             exit(1);
         }
@@ -587,6 +657,14 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c) {
     return true;
 }
 
+//
+// Parse a postfix operator:
+//      ++      increment
+//      --      decrement
+//      =       assignment
+//      []      array indexing
+//      ()      function call
+//
 static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_is_lvalue)
 {
     char c, c1, c2;
@@ -595,11 +673,11 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
 
     whitespace(args, in);
 
-    switch(c = fgetc(in)) {
+    switch (c = fgetc(in)) {
     case '+': /* postfix increment operator */
-        if((c = fgetc(in)) != '+') {
+        if ((c = fgetc(in)) != '+') {
             ungetc(c, in);
-            if(left_is_lvalue)
+            if (left_is_lvalue)
                 fprintf(out, "  mov (%%rax), %%rax\n");
             fprintf(out, "  push %%rax\n");
             rvalue(args, in, out);
@@ -607,7 +685,7 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
             break;
         }
 
-        if(!left_is_lvalue) {
+        if (!left_is_lvalue) {
             eprintf(args->arg0, "left operand of " QUOTE_FMT("++") " has to be an lvalue");
             exit(1);
         }
@@ -621,9 +699,9 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         break;
 
     case '-': /* postfix decrement operator */
-        if((c = fgetc(in)) != '-') {
+        if ((c = fgetc(in)) != '-') {
             ungetc(c, in);
-            if(left_is_lvalue)
+            if (left_is_lvalue)
                 fprintf(out, "  mov (%%rax), %%rax\n");
             fprintf(out, "  push %%rax\n");
             rvalue(args, in, out);
@@ -631,7 +709,7 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
             break;
         }
 
-        if(!left_is_lvalue) {
+        if (!left_is_lvalue) {
             eprintf(args->arg0, "left operand of " QUOTE_FMT("--") " has to be an lvalue");
             exit(1);
         }
@@ -650,17 +728,17 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         ungetc(c2, in);
         ungetc(c1, in);
 
-        if(c1 == '=' && c2 != '=') /* check for equality operator `==` */
+        if (c1 == '=' && c2 != '=') /* check for equality operator `==` */
             goto bin_op;
 
-        if(!left_is_lvalue) {
+        if (!left_is_lvalue) {
             eprintf(args->arg0, "left operand of assignment has to be an lvalue");
             exit(1);
         }
 
         fprintf(out, "  push %%rax\n  mov (%%rax), %%rax\n");
 
-        if(!bin_op(args, in, out, fgetc(in)))
+        if (!bin_op(args, in, out, fgetc(in)))
             rvalue(args, in, out);
 
         fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
@@ -671,7 +749,7 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         expression(args, in, out);
         fprintf(out, "  pop %%rdi\n  shl $3, %%rax\n  add %%rdi, %%rax\n");
 
-        if((c = fgetc(in)) != ']') {
+        if ((c = fgetc(in)) != ']') {
             eprintf(args->arg0, "unexpected token " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT("]") " after index expression\n", c);
             exit(1);
         }
@@ -681,27 +759,27 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
     case '(': /* function call */
         fprintf(out, "  push %%rax\n");
 
-        while((c = fgetc(in)) != ')') {
+        while ((c = fgetc(in)) != ')') {
             ungetc(c, in);
             expression(args, in, out);
 
-            if(++num_args > MAX_FN_CALL_ARGS) {
+            if (++num_args > MAX_FN_CALL_ARGS) {
                 eprintf(args->arg0, "only %d call arguments are currently supported\n", MAX_FN_CALL_ARGS);
                 exit(1);
             }
             fprintf(out, "  push %%rax\n");
 
             whitespace(args, in);
-            if((c = fgetc(in)) == ')')
+            if ((c = fgetc(in)) == ')')
                 break;
-            else if(c == ',')
+            else if (c == ',')
                 continue;
 
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT(")") " after call expression\n", c);
             exit(1);
         }
 
-        while(num_args > 0)
+        while (num_args > 0)
             fprintf(out, "  pop %s\n", arg_registers[--num_args]);
 
         fprintf(out, "  pop %%r10\n  call *%%r10\n");
@@ -710,33 +788,36 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
 
     default:
         bin_op:
-        if(left_is_lvalue)
+        if (left_is_lvalue)
             fprintf(out, "  mov (%%rax), %%rax\n");
 
-        if(!bin_op(args, in, out, c))
+        if (!bin_op(args, in, out, c))
             return left_is_lvalue;
     }
 
     return is_lvalue;
 }
 
+//
+// Find given name among locals or externs of current function.
+//
 static intptr_t find_identifier(struct compiler_args *args, const char *buffer, bool *is_extrn)
 {
     size_t i;
     struct stack_var* var;
 
-    for(i = 0; i < args->locals.size; i++) {
+    for (i = 0; i < args->locals.size; i++) {
         var = (struct stack_var*) args->locals.data[i];
-        if(strcmp(buffer, var->name) == 0) {
-            if(is_extrn)
+        if (strcmp(buffer, var->name) == 0) {
+            if (is_extrn)
                 *is_extrn = false;
             return var->offset;
         }
     }
 
-    for(i = 0; i < args->extrns.size; i++) {
-        if(strcmp(buffer, args->extrns.data[i]) == 0) {
-            if(is_extrn)
+    for (i = 0; i < args->extrns.size; i++) {
+        if (strcmp(buffer, args->extrns.data[i]) == 0) {
+            if (is_extrn)
                 *is_extrn = true;
             return i;
         }
@@ -745,7 +826,13 @@ static intptr_t find_identifier(struct compiler_args *args, const char *buffer, 
     return -1;
 }
 
-static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) {
+//
+// Parse a primary expression.
+// It may have only unary operations (no binary ops).
+// Return true when it's an lvalue (address of the value).
+//
+static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
+{
     static char buffer[BUFSIZ];
     char c;
     intptr_t value;
@@ -753,9 +840,9 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
 
     whitespace(args, in);
 
-    switch(c = fgetc(in)) {
+    switch (c = fgetc(in)) {
     case '\'': /* character literal */
-        if((value = character(args, in)))
+        if ((value = character(args, in)))
             fprintf(out, "  mov $%lu, %%rax\n", value);
         else
             fprintf(out, "  xor %%rax, %%rax\n");
@@ -772,7 +859,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '!': /* not operator */
-        if(primary_expression(args, in, out)) {
+        if (primary_expression(args, in, out)) {
             /* fetch rvalue */
             fprintf(out, "  mov (%%rax), %%rax\n");
         }
@@ -780,8 +867,8 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '-':
-        if((c = fgetc(in)) == '-') { /* prefix decrement operator */
-            if(!primary_expression(args, in, out)) {
+        if ((c = fgetc(in)) == '-') { /* prefix decrement operator */
+            if (!primary_expression(args, in, out)) {
                 eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("--") "\n");
                 exit(1);
             }
@@ -790,7 +877,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         }
         else { /* negation operator */
             ungetc(c, in);
-            if(primary_expression(args, in, out)) {
+            if (primary_expression(args, in, out)) {
                 /* fetch rvalue */
                 fprintf(out, "  mov (%%rax), %%rax\n");
             }
@@ -799,11 +886,11 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '+': /* prefix increment operator */
-        if((c = fgetc(in)) != '+') {
+        if ((c = fgetc(in)) != '+') {
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT("+") "\n", c);
             exit(1);
         }
-        if(!primary_expression(args, in, out)) {
+        if (!primary_expression(args, in, out)) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("++") "\n");
             exit(1);
         }
@@ -812,7 +899,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '*': /* indirection operator */
-        if(primary_expression(args, in, out)) {
+        if (primary_expression(args, in, out)) {
             /* fetch rvalue */
             fprintf(out, "  mov (%%rax), %%rax\n");
         }
@@ -820,7 +907,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '&': /* address operator */
-        if(!primary_expression(args, in, out)) {
+        if (!primary_expression(args, in, out)) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("&") "\n");
             exit(1);
         }
@@ -831,25 +918,25 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         exit(1);
 
     default:
-        if(isdigit(c)) { /* integer literal */
+        if (isdigit(c)) { /* integer literal */
             ungetc(c, in);
-            if((value = number(args, in)))
+            if ((value = number(args, in)))
                 fprintf(out, "  mov $%lu, %%rax\n", value);
             else
                 fprintf(out, "  xor %%rax, %%rax\n");
         }
-        else if(isalpha(c)) { /* identifier */
+        else if (isalpha(c)) { /* identifier */
             is_lvalue = true;
 
             ungetc(c, in);
             identifier(args, in, buffer);
 
-            if((value = find_identifier(args, buffer, &is_extrn)) < 0) {
+            if ((value = find_identifier(args, buffer, &is_extrn)) < 0) {
                 eprintf(args->arg0, "undefined identifier " QUOTE_FMT("%s") "\n", buffer);
                 exit(1);
             }
 
-            if(is_extrn)
+            if (is_extrn)
                 fprintf(out, "  lea %s(%%rip), %%rax\n", buffer);
             else
                 fprintf(out, "  lea -%lu(%%rbp), %%rax\n", (value + 2) * args->word_size);
@@ -863,11 +950,18 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
     return is_lvalue;
 }
 
+//
+// Parse rvalue.
+//
 static inline bool rvalue(struct compiler_args *args, FILE *in, FILE *out)
 {
     return operator(args, in, out, primary_expression(args, in, out));
 }
 
+//
+// Parse expression.
+// Return true when it's an lvalue (address of the value).
+//
 static bool expression(struct compiler_args *args, FILE *in, FILE *out)
 {
     char c;
@@ -876,13 +970,13 @@ static bool expression(struct compiler_args *args, FILE *in, FILE *out)
     bool is_lvalue = operator(args, in, out, primary_expression(args, in, out));
 
     whitespace(args, in);
-    switch(c = fgetc(in)) {
+    switch (c = fgetc(in)) {
     case '?': /* ternary operators have the lowest precedence, so they need to be resolved here */
         this_conditional = conditional++;
         fprintf(out, "  cmp $0, %%rax\n  je .L.cond.else.%ld\n", this_conditional);
         expression(args, in, out);
         whitespace(args, in);
-        if((c = fgetc(in)) != ':') {
+        if ((c = fgetc(in)) != ':') {
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(":") " between conditional branches\n", c);
             exit(1);
         }
@@ -896,7 +990,11 @@ static bool expression(struct compiler_args *args, FILE *in, FILE *out)
     }
 }
 
-static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_ident, intptr_t switch_id, struct list *cases)
+//
+// Parse a statement.
+//
+static void statement(struct compiler_args *args, FILE *in, FILE *out,
+                      char* fn_ident, intptr_t switch_id, struct list *cases)
 {
     char c;
     static char buffer[BUFSIZ];
@@ -912,14 +1010,14 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
         unsigned long stack_offset = args->stack_offset;
 
         whitespace(args, in);
-        while((c = fgetc(in)) != '}') {
+        while ((c = fgetc(in)) != '}') {
             ungetc(c, in);
             statement(args, in, out, fn_ident, switch_id, cases);
             whitespace(args, in);
         }
 
         // reset stack so variables in loops don't overflow the stack
-        if(stack_offset != args->stack_offset)
+        if (stack_offset != args->stack_offset)
         {
             fprintf(out, "  add $%lu, %%rsp\n", (args->stack_offset - stack_offset) * args->word_size);
             args->stack_offset = stack_offset;
@@ -930,13 +1028,13 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
         break; /* null statement */
 
     default:
-        if(isalpha(c)) {
+        if (isalpha(c)) {
             ungetc(c, in);
             identifier(args, in, buffer);
             whitespace(args, in);
 
-            if(strcmp(buffer, "goto") == 0) { /* goto statement */
-                if(!identifier(args, in, buffer)) {
+            if (strcmp(buffer, "goto") == 0) { /* goto statement */
+                if (!identifier(args, in, buffer)) {
                     eprintf(args->arg0, "expect label name after " QUOTE_FMT("goto") "\n");
                     exit(1);
                 }
@@ -945,9 +1043,9 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 ASSERT_CHAR(args, in, ';', "expect " QUOTE_FMT(";") " after " QUOTE_FMT("goto") " statement\n");
                 return;
             }
-            else if(strcmp(buffer, "return") == 0) { /* return statement */
-                if((c = fgetc(in)) != ';') {
-                    if(c != '(') {
+            else if (strcmp(buffer, "return") == 0) { /* return statement */
+                if ((c = fgetc(in)) != ';') {
+                    if (c != '(') {
                         eprintf(args->arg0, "expect " QUOTE_FMT("(") " or " QUOTE_FMT(";") " after " QUOTE_FMT("return") "\n");
                         exit(1);
                     }
@@ -962,7 +1060,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 fprintf(out, "  jmp .L.return.%s\n", fn_ident);
                 return;
             }
-            else if(strcmp(buffer, "if") == 0) { /* conditional statement */
+            else if (strcmp(buffer, "if") == 0) { /* conditional statement */
                 id = stmt_id++;
 
                 ASSERT_CHAR(args, in, '(', "expect " QUOTE_FMT("(") " after " QUOTE_FMT("if") "\n");
@@ -976,7 +1074,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
 
                 whitespace(args, in);
                 memset(buffer, 0, 6 * sizeof(char));
-                if((buffer[0] = fgetc(in)) == 'e' &&
+                if ((buffer[0] = fgetc(in)) == 'e' &&
                    (buffer[1] = fgetc(in)) == 'l' &&
                    (buffer[2] = fgetc(in)) == 's' &&
                    (buffer[3] = fgetc(in)) == 'e' &&
@@ -984,8 +1082,8 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     statement(args, in, out, fn_ident, -1, NULL);
                 }
                 else {
-                    for(i = 4; i >= 0; i--) {
-                        if(buffer[i])
+                    for (i = 4; i >= 0; i--) {
+                        if (buffer[i])
                             ungetc(buffer[i], in);
                     }
                 }
@@ -993,7 +1091,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 fprintf(out, ".L.end.%lu:\n", id);
                 return;
             }
-            else if(strcmp(buffer, "while") == 0) { /* while statement */
+            else if (strcmp(buffer, "while") == 0) { /* while statement */
                 id = stmt_id++;
 
                 ASSERT_CHAR(args, in, '(', "expect " QUOTE_FMT("(") " after " QUOTE_FMT("while") "\n");
@@ -1011,7 +1109,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 fprintf(out, "  jmp .L.start.%lu\n.L.end.%lu:\n", id, id);
                 return;
             }
-            else if(strcmp(buffer, "switch") == 0) { /* switch statement */
+            else if (strcmp(buffer, "switch") == 0) { /* switch statement */
                 id = stmt_id++;
 
                 expression(args, in, out);
@@ -1025,7 +1123,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     id, id
                 );
 
-                for(i = 0; i < (intptr_t) switch_case_list.size; i++)
+                for (i = 0; i < (intptr_t) switch_case_list.size; i++)
                     fprintf(out, "  cmp $%lu, %%rax\n  je .L.case.%lu.%lu\n", (uintptr_t) switch_case_list.data[i], id, (uintptr_t) switch_case_list.data[i]);
 
                 fprintf(out, ".L.end.%ld:\n", id);
@@ -1033,10 +1131,10 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 list_free(&switch_case_list);
                 return;
             }
-            else if(strcmp(buffer, "case") == 0) { /* case statement */
+            else if (strcmp(buffer, "case") == 0) { /* case statement */
                 id = stmt_id++;
 
-                if(switch_id < 0) {
+                if (switch_id < 0) {
                     eprintf(args->arg0, "unexpected " QUOTE_FMT("case") " outside of " QUOTE_FMT("switch") " statements\n");
                     exit(1);
                 }
@@ -1046,7 +1144,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     value = character(args, in);
                     break;
                 default:
-                    if(isdigit(c)) {
+                    if (isdigit(c)) {
                         ungetc(c, in);
                         value = number(args, in);
                         break;
@@ -1056,7 +1154,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     exit(1);
                 }
 
-                if((intptr_t) value == EOF) {
+                if ((intptr_t) value == EOF) {
                     eprintf(args->arg0, "unexpected end of file, expect constant after " QUOTE_FMT("case") "\n");
                     exit(1);
                 }
@@ -1068,14 +1166,14 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 statement(args, in, out, fn_ident, switch_id, cases);
                 return;
             }
-            else if(strcmp(buffer, "extrn") == 0) { /* external declaration */
+            else if (strcmp(buffer, "extrn") == 0) { /* external declaration */
                 do {
-                    if(!identifier(args, in, buffer)) {
+                    if (!identifier(args, in, buffer)) {
                         eprintf(args->arg0, "expect identifier after " QUOTE_FMT("extrn") "\n");
                         exit(1);
                     }
 
-                    if(find_identifier(args, buffer, NULL) >= 0) {
+                    if (find_identifier(args, buffer, NULL) >= 0) {
                         eprintf(args->arg0, "identifier " QUOTE_FMT("%s") " is already defined in this scope\n", buffer);
                         exit(1);
                     }
@@ -1083,17 +1181,17 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     list_push(&args->extrns, strdup(buffer));
 
                     whitespace(args, in);
-                } while((c = fgetc(in)) == ',');
+                } while ((c = fgetc(in)) == ',');
 
-                if(c != ';') {
+                if (c != ';') {
                     eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(";") " or " QUOTE_FMT(",") "\n", c);
                     exit(1);
                 }
                 return;
             }
-            else if(strcmp(buffer, "auto") == 0) {
+            else if (strcmp(buffer, "auto") == 0) {
                 do {
-                    if(!identifier(args, in, buffer)) {
+                    if (!identifier(args, in, buffer)) {
                         eprintf(args->arg0, "expect identifier after " QUOTE_FMT("auto") "\n");
                         exit(1);
                     }
@@ -1101,29 +1199,29 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
 
                     // default 'auto' vector size is 1;
                     value = 1;
-                    if((c = fgetc(in)) == '\'') {
+                    if ((c = fgetc(in)) == '\'') {
                         value = character(args, in);
                         whitespace(args, in);
                         c = fgetc(in);
                     }
-                    else if(c == '[') {
+                    else if (c == '[') {
                         value = number(args, in);
                         whitespace(args, in);
-                        if((c = fgetc(in)) != ']') {
+                        if ((c = fgetc(in)) != ']') {
                             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT("]") "\n", c);
                             exit(1);
                         }
                         whitespace(args, in);
                         c = fgetc(in);
                     }
-                    else if(isdigit(c)) {
+                    else if (isdigit(c)) {
                         ungetc(c, in);
                         value = number(args, in);
                         whitespace(args, in);
                         c = fgetc(in);
                     }
 
-                    if(find_identifier(args, buffer, NULL) >= 0) {
+                    if (find_identifier(args, buffer, NULL) >= 0) {
                         eprintf(args->arg0, "identifier " QUOTE_FMT("%s") " is already defined in this scope\n", buffer);
                         exit(1);
                     }
@@ -1132,17 +1230,17 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                     args->stack_offset += value;
 
                     fprintf(out, "  sub $%lu, %%rsp\n", args->word_size * value);
-                   // while(value--)
+                   // while (value--)
                    //     fprintf(out, "  movq $0, -%lu(%%rbp)\n", (args->stack_items - value) * args->word_size);
-                } while((c) == ',');
+                } while ((c) == ',');
 
-                if(c != ';') {
+                if (c != ';') {
                     eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(";") " or " QUOTE_FMT(",") "\n", c);
                     exit(1);
                 }
 
                 // align stack to 16 bytes
-                if(args->stack_offset % 2)
+                if (args->stack_offset % 2)
                 {
                     fprintf(out, "  sub $%u, %%rsp\n", args->word_size);
                     args->stack_offset++;
@@ -1151,26 +1249,26 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
                 return;
             }
             else {
-                switch(c = fgetc(in)) {
+                switch (c = fgetc(in)) {
                 case ':': /* label */
                     fprintf(out, ".L.label.%s.%s:\n", buffer, fn_ident);
                     statement(args, in, out, fn_ident, switch_id, cases);
                     return;
                 default:
                     ungetc(c, in);
-                    for(i = strlen(buffer) - 1; i >= 0; i--)
+                    for (i = strlen(buffer) - 1; i >= 0; i--)
                         ungetc(buffer[i], in);
 
                     expression(args, in, out);
                     whitespace(args, in);
-                    if((c = fgetc(in)) != ';') {
+                    if ((c = fgetc(in)) != ';') {
                         eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(";") " after expression statement\n", c);
                         exit(1);
                     }
                 }
             }
         }
-        else if(c == EOF) {
+        else if (c == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect statement\n");
             exit(1);
         }
@@ -1178,7 +1276,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
             ungetc(c, in);
             expression(args, in, out);
             whitespace(args, in);
-            if((c = fgetc(in)) != ';') {
+            if ((c = fgetc(in)) != ';') {
                 eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") " expect " QUOTE_FMT(";") " after expression statement\n", c);
                 exit(1);
             }
@@ -1186,15 +1284,18 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out, char* fn_
     }
 }
 
+//
+// Parse a list of function arguments.
+//
 static void arguments(struct compiler_args *args, FILE *in, FILE *out)
 {
     char c;
     int i = 0;
     static char buffer[BUFSIZ];
 
-    while(1) {
+    while (1) {
         whitespace(args, in);
-        if(!identifier(args, in, buffer)) {
+        if (!identifier(args, in, buffer)) {
             eprintf(args->arg0, "expect " QUOTE_FMT(")") " or identifier after function arguments\n");
             exit(1);
         }
@@ -1203,7 +1304,7 @@ static void arguments(struct compiler_args *args, FILE *in, FILE *out)
         list_push(&args->locals, init_stack_var(strdup(buffer), args->stack_offset++));
 
         whitespace(args, in);
-        switch(c = fgetc(in)) {
+        switch (c = fgetc(in)) {
             case ')':
                 return;
             case ',':
@@ -1215,21 +1316,27 @@ static void arguments(struct compiler_args *args, FILE *in, FILE *out)
     }
 }
 
+//
+// Parse a function definition.
+//
 static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_id)
 {
     size_t i;
     char c;
 
-    for(i = 0; i < args->locals.size; i++)
+    // Clear the list of locals.
+    for (i = 0; i < args->locals.size; i++)
         free_stack_var((struct stack_var*) args->locals.data[i]);
     list_clear(&args->locals);
     args->stack_offset = 0;
 
-    for(i = 0; i < args->extrns.size; i++)
-        if(args->extrns.data[i] != fn_id)
+    // Clear the list of externals.
+    for (i = 0; i < args->extrns.size; i++)
+        if (args->extrns.data[i] != fn_id)
             free(args->extrns.data[i]);
     list_clear(&args->extrns);
 
+    // Add name of the function to externals.
     list_push(&args->extrns, fn_id);
 
     fprintf(out,
@@ -1242,7 +1349,7 @@ static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_i
         fn_id, fn_id, args->word_size
     );
 
-    if((c = fgetc(in)) != ')') {
+    if ((c = fgetc(in)) != ')') {
         ungetc(c, in);
         arguments(args, in, out);
     }
@@ -1259,6 +1366,9 @@ static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_i
     );
 }
 
+//
+// Create read-only section with strings.
+//
 static void strings(struct compiler_args *args, FILE *out)
 {
     char *string;
@@ -1266,12 +1376,12 @@ static void strings(struct compiler_args *args, FILE *out)
 
     fprintf(out, ".section .rodata\n");
 
-    for(i = 0; i < args->strings.size; i++) {
+    for (i = 0; i < args->strings.size; i++) {
         fprintf(out, ".string.%lu:\n", i);
 
         string = (char*) args->strings.data[i];
         size = strlen(string);
-        for(j = 0; j < size; j++)
+        for (j = 0; j < size; j++)
             fprintf(out, "  .byte %u\n", string[j]);
         fprintf(out, "  .byte 0\n");
 
@@ -1281,16 +1391,22 @@ static void strings(struct compiler_args *args, FILE *out)
     list_free(&args->strings);
 }
 
+//
+// Parse top level declarations:
+//      name(...    -- function definition
+//      name[...    -- vector declaration
+//      name...     -- scalar declaration
+//
 static void declarations(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
     char c;
     size_t i;
 
-    while(identifier(args, in, buffer)) {
+    while (identifier(args, in, buffer)) {
         fprintf(out, ".globl %s\n", buffer);
 
-        switch(c = fgetc(in)) {
+        switch (c = fgetc(in)) {
         case '(':
             function(args, in, out, buffer);
             break;
@@ -1309,20 +1425,22 @@ static void declarations(struct compiler_args *args, FILE *in, FILE *out)
         }
     }
 
-    if(fgetc(in) != EOF) {
+    if (fgetc(in) != EOF) {
         eprintf(args->arg0, "expect identifier at top level\n");
         exit(1);
     }
 
     strings(args, out);
 
-    for(i = 0; i < args->locals.size; i++)
+    // Clear the list of locals.
+    for (i = 0; i < args->locals.size; i++)
         free_stack_var((struct stack_var*) args->locals.data[i]);
     list_free(&args->locals);
     args->stack_offset = 0;
 
-    for(i = 0; i < args->extrns.size; i++)
-        if(args->extrns.data[i] != buffer)
+    // Clear the list of externals.
+    for (i = 0; i < args->extrns.size; i++)
+        if (args->extrns.data[i] != buffer)
             free(args->extrns.data[i]);
     list_free(&args->extrns);
 }
