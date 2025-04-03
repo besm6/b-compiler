@@ -10,7 +10,7 @@ TEST_F(bcause, global_scalars)
         c -345, 'foo', "bar";
 
         main() {
-            extrn printf, a, b, c;
+            extrn a, b, c;
 
             printf("a = %d*n", a);
             printf("b = %d*n", b);
@@ -32,7 +32,7 @@ TEST_F(bcause, global_vectors)
         c[4] -345, 'foo', "bar";
 
         main() {
-            extrn printf, a, b, c;
+            extrn a, b, c;
 
             printf("a = %d*n", a);
             printf("b = %d*n", b);

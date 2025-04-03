@@ -5,18 +5,17 @@
    (C) 2016 Robert Swierczek, GPL3
 
    To compile the compiler with bcause:
-      make -C linux install
-      bcause b-pdp7.b -o b.out
+      bcause b.b -o pdp7-b
 
    To compile hello.b:
-      b.out < examples/hello.b > hello.s
+      pdp7-b < ../examples/hello.b > hello.s
 
    To compile the compiler with itself:
-      b.out < b-pdp7.b > b.s
+      pdp7-b < b.b > b.s
 */
 
 main() {
-  extrn symtab, eof, ns, extdef, blkend;
+  extrn symtab, eof, ns;
 
   while (!eof) {
     ns = symtab + 51;
@@ -26,7 +25,7 @@ main() {
 }
 
 lookup() {
-  extrn symtab, symbuf, eof, ns, error;
+  extrn symtab, symbuf, eof, ns;
   auto np, sp, rp;
 
   rp = symtab;
@@ -61,7 +60,7 @@ lookup() {
 }
 
 symbol() {
-  extrn symbuf, ctab, peeksym, peekc, eof, line, csym, cval, read, subseq, error, getcc, lookup;
+  extrn symbuf, ctab, peeksym, peekc, eof, line, csym, cval;
   auto b, c, ct, sp;
 
   if (peeksym>=0) {
@@ -175,7 +174,7 @@ com1:
 }
 
 subseq(c,a,b) {
-  extrn peekc, read;
+  extrn peekc;
 
   if (!peekc)
     peekc = read();
@@ -186,7 +185,7 @@ subseq(c,a,b) {
 }
 
 getcc() {
-  extrn cval, mapch, error;
+  extrn cval;
   auto c;
 
   cval = 0;
@@ -201,7 +200,6 @@ getcc() {
 }
 
 getstr() {
-  extrn mapch, number, write;
   auto i, c, d;
 
   i = 1;
@@ -223,7 +221,7 @@ loop:
 }
 
 mapch(c) {
-  extrn peekc, read, error;
+  extrn peekc;
   auto a;
 
   if ((a=read())==c)
@@ -263,7 +261,7 @@ mapch(c) {
 }
 
 expr(lev) {
-  extrn peeksym, csym, cval, isn, symbol, gen, number, write, getstr, name, pexpr, error;
+  extrn peeksym, csym, cval, isn;
   auto o;
 
   o = symbol();
@@ -433,8 +431,6 @@ loop:
 }
 
 pexpr() {
-  extrn symbol, expr, error;
-
   if (symbol()==6) { /* ( */
     expr(15);
     if (symbol()==7) /* ) */
@@ -444,7 +440,7 @@ pexpr() {
 }
 
 declare(kw) {
-  extrn csym, cval, nauto, symbol, gen, error;
+  extrn csym, cval, nauto;
   auto o;
 
   while((o=symbol())==20) { /* name */
@@ -473,7 +469,7 @@ syntax:
 }
 
 extdef() {
-  extrn peeksym, csym, cval, nauto, symbol, write, name, declare, gen, stmtlist, number, error, stmt;
+  extrn peeksym, csym, cval, nauto;
   auto o, c;
 
   o = symbol();
@@ -574,7 +570,7 @@ syntax:
 }
 
 stmtlist() {
-  extrn peeksym, eof, symbol, stmt, error;
+  extrn peeksym, eof;
   auto o;
 
   while (!eof) {
@@ -587,7 +583,7 @@ stmtlist() {
 }
 
 stmt() {
-  extrn peeksym, peekc, csym, cval, isn, nauto, symbol, error, stmtlist, expr, gen, pexpr, jumpc, jump, label;
+  extrn peeksym, peekc, csym, cval, isn, nauto;
   auto o, o1, o2;
 
 next:
@@ -689,7 +685,7 @@ syntax:
 }
 
 blkend() {
-  extrn isn, write, number;
+  extrn isn;
   auto i;
 
   if (!isn)
@@ -706,8 +702,6 @@ blkend() {
 }
 
 gen(o,n) {
-  extrn write, number;
-
   write(o);
   write(' ');
   number(n);
@@ -715,8 +709,6 @@ gen(o,n) {
 }
 
 jumpc(n) {
-  extrn write, number;
-
   write('f '); /* ifop */
   write('1f');
   write('+');
@@ -725,8 +717,6 @@ jumpc(n) {
 }
 
 jump(n) {
-  extrn write, number, gen;
-
   write('x ');
   write('1f');
   write('+');
@@ -735,29 +725,21 @@ jump(n) {
 }
 
 label(n) {
-  extrn write, number;
-
   write('l');
   number(n);
   write('=.');
   write('*n');
 }
 
-/*
 printn(n) {
-  extrn write;
-
   if (n > 9) {
     printn(n / 10);
     n = n % 10;
   }
   write(n + '0');
 }
-*/
 
 number(x) {
-  extrn write, printn;
-
   if (x < 0) {
     write('-');
     x = -x;
@@ -766,8 +748,6 @@ number(x) {
 }
 
 name(s) {
-  extrn write;
-
   while (*s) {
     write(*s);
     s = s+1;
@@ -775,7 +755,7 @@ name(s) {
 }
 
 error(code) {
-  extrn line, eof, csym, nerror, fout, write, printn, flush, name;
+  extrn line, eof, csym, nerror, fout;
   auto f;
 
   if (eof | nerror==20) {

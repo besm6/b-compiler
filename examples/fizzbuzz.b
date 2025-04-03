@@ -7,7 +7,7 @@
 n 100;
 
 main() {
-    extrn printn, write, n;
+    extrn n;
     auto i;
 
     while(i++ < n) {
@@ -18,7 +18,7 @@ main() {
         else if(0 == i % 5)
             write('Buzz');
         else
-            printn(i, 10);
+            printnb(i, 10);
         write('*n');
     }
 }

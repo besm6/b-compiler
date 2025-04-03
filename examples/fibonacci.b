@@ -3,7 +3,7 @@
 n 10;
 
 main() {
-    extrn printf, fib, fib_rec, n;
+    extrn n;
     printf("%d*n", fib(n));
 }
 

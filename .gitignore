@@ -1,7 +1,15 @@
 b
 b-c
 bcause
+pdp7-b
 build
+e-2
+fibonacci
+fizzbuzz
+hello
+helloworld
+unary
+vars
 *.s
 *.a
 *.o
@@ -10,3 +18,4 @@ build
 *.dis
 *.nm
 *.trace
+*.b-

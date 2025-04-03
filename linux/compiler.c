@@ -932,8 +932,19 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
             identifier(args, in, buffer);
 
             if ((value = find_identifier(args, buffer, &is_extrn)) < 0) {
-                eprintf(args->arg0, "undefined identifier " QUOTE_FMT("%s") "\n", buffer);
-                exit(1);
+
+                // Unknown identifier.
+                whitespace(args, in);
+                c = fgetc(in);
+                if (c == '(') {
+                    // When next symbol is '(', add this name to the list of externals.
+                    ungetc(c, in);
+                    list_push(&args->extrns, strdup(buffer));
+                    is_extrn = true;
+                } else {
+                    eprintf(args->arg0, "undefined identifier " QUOTE_FMT("%s") "\n", buffer);
+                    exit(1);
+                }
             }
 
             if (is_extrn)

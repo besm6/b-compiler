@@ -1,7 +1,7 @@
 /* The following program will print 'Hello World' to stdout. */
 
 main() {
-    extrn x, printf;
+    extrn x;
     auto y;
 
     printf("global -x = %d, expect %d*n", -x, -42);

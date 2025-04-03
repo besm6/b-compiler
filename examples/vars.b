@@ -1,7 +1,7 @@
 /* The following program will print 'Hello World' to stdout. */
 
 main() {
-    extrn x, printf;
+    extrn x;
     auto y;
 
     y = x + 100;

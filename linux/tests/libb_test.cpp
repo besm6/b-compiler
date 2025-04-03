@@ -6,8 +6,6 @@ TEST_F(bcause, libb_write)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn write;
-
             write('Hello,');
             write(' World');
             write('!*n');
@@ -21,8 +19,6 @@ TEST_F(bcause, libb_printf)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn printf;
-
             printf("Hello, World!*n");
             printf("%% %% %%%%*n");
             printf("format %%d: %d %d*n", 123, -123);
@@ -45,8 +41,6 @@ TEST_F(bcause, libb_exit)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn printf, exit;
-
             printf("before exit()*n");
             exit();
             printf("after exit()*n");
@@ -60,8 +54,6 @@ TEST_F(bcause, libb_char)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn write, char;
-
             write(char("fubar", 2));
             write(char("fubar", 4));
             write(char("fubar", 1));
@@ -78,7 +70,6 @@ TEST_F(bcause, libb_lchar)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn printf, lchar;
             auto str;
 
             lchar(&str, 0, 'f');
@@ -98,8 +89,6 @@ TEST_F(bcause, libb_nwrite)
 {
     auto output = compile_and_run(R"(
         main() {
-            extrn nwrite;
-
             nwrite(1, "foobar*n", 7);
         }
     )");

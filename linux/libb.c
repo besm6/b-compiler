@@ -60,8 +60,6 @@ static inline SYSCALL_TYPE syscall3(SYSCALL_TYPE n, SYSCALL_TYPE a1, SYSCALL_TYP
 #define SYS_setuid 105
 #define SYS_time 201
 
-void B_FN(printn)(B_TYPE n, B_TYPE b);
-
 //
 // B standard library implementation
 //
@@ -149,7 +147,7 @@ B_TYPE B_FN(nwrite)(B_TYPE file, B_TYPE buffer, B_TYPE count) {
    the base b, where 2<=b<=10, This routine uses the fact that
    in the ANSCII character set, the digits O to 9 have sequential
    code values. */
-void B_FN(printn)(B_TYPE n, B_TYPE b) {
+void B_FN(printnb)(B_TYPE n, B_TYPE b) {
     B_TYPE a;
 
     if(n < 0) {
@@ -158,7 +156,7 @@ void B_FN(printn)(B_TYPE n, B_TYPE b) {
     }
 
     if((a = n / b))
-        B_FN(printn)(a, b);
+        B_FN(printnb)(a, b);
     B_FN(write)(n % b + '0');
 }
 
@@ -186,7 +184,7 @@ loop:
                 x = -x;
                 B_FN(write)('-');
             }
-            B_FN(printn)(x, c == 'o' ? 8 : 10);
+            B_FN(printnb)(x, c == 'o' ? 8 : 10);
             goto loop;
 
         case 'c':

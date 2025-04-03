@@ -6,7 +6,7 @@
    where the bases of the digits are 2, 3, 4, . . . */
 
 main() {
-	extrn write, n, v;
+	extrn n, v;
 	auto i, c, col, a;
 
 	i = col = 0;
