@@ -60,8 +60,8 @@ TEST_F(bcause, local_scalars)
         }
     )");
     const std::string expect = R"(offset a = 0
-offset b = 992
-offset c = 1952
+offset b = -992
+offset c = -1952
 )";
     EXPECT_EQ(output, expect);
 }
@@ -81,7 +81,7 @@ TEST_F(bcause, local_vectors)
     )");
     const std::string expect = R"(offset a = 0
 offset b = 0
-offset c = 992
+offset c = -992
 )";
     EXPECT_EQ(output, expect);
 }

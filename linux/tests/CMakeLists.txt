@@ -35,5 +35,7 @@ add_executable(btest EXCLUDE_FROM_ALL
     fixture.cpp
     libb_test.cpp
     globals_test.cpp
+    func_test.cpp
+    expr_test.cpp
 )
 gtest_discover_tests(btest EXTRA_ARGS --gtest_repeat=1 PROPERTIES TIMEOUT 120)

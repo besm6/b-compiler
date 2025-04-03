@@ -575,11 +575,16 @@ static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c)
 {
     switch (c) {
     case '+': /* addition operator */
-    case '-': /* subtraction operator */
     case '*': /* multiplication operator */
         fprintf(out, "  push %%rax\n");
         rvalue(args, in, out);
-        fprintf(out, "  pop %%rdi\n  %s %%rdi, %%rax\n", c == '+' ? "add" : c == '-' ? "sub" : "imul");
+        fprintf(out, "  pop %%rdi\n  %s %%rdi, %%rax\n", c == '+' ? "add" : "imul");
+        break;
+
+    case '-': /* subtraction operator */
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
         break;
 
     case '/': /* division operator */
@@ -704,9 +709,7 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
             ungetc(c, in);
             if (left_is_lvalue)
                 fprintf(out, "  mov (%%rax), %%rax\n");
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out);
-            fprintf(out, "  pop %%rdi\n  sub %%rdi, %%rax\n");
+            bin_op(args, in, out, '-');
             break;
         }
 
@@ -1017,8 +1020,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
 
     whitespace(args, in);
     switch (c = fgetc(in)) {
-    case '{':
-    {
+    case '{': {
         unsigned long stack_offset = args->stack_offset;
 
         whitespace(args, in);
@@ -1029,12 +1031,12 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
         }
 
         // reset stack so variables in loops don't overflow the stack
-        if (stack_offset != args->stack_offset)
-        {
+        if (stack_offset != args->stack_offset) {
             fprintf(out, "  add $%lu, %%rsp\n", (args->stack_offset - stack_offset) * args->word_size);
             args->stack_offset = stack_offset;
         }
-    } break;
+        }
+        break;
 
     case ';':
         break; /* null statement */
