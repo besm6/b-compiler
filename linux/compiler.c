@@ -85,12 +85,25 @@ void eprintf(const char *arg0, const char *fmt, ...)
     va_end(ap);
 }
 
+char *concat(const char *a, const char *b)
+{
+    unsigned len = strlen(a) + strlen(b) + 1;
+    char *result = calloc(1, len);
+    if (!result) {
+        fprintf(stderr, "out of memory in concat()\n");
+        exit(1);
+    }
+    strcpy(result, a);
+    strcat(result, b);
+    return result;
+}
+
 int compile(struct compiler_args *args)
 {
     // create a buffer for the assembly code
     char* buf;
-    char* asm_file = args->do_assembling ? A_S : args->output_file;
-    char* obj_file = args->do_linking ? A_O : args->output_file;
+    char* asm_file = args->do_assembling ? concat(args->output_file, ".s") : args->output_file;
+    char* obj_file = args->do_linking ? concat(args->output_file, ".o") : args->output_file;
     size_t buf_len, len, i;
     FILE *buffer = open_memstream(&buf, &buf_len);
     FILE *out, *in;
