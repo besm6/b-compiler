@@ -790,7 +790,10 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out) 
         break;
 
     case '*': /* indirection operator */
-        primary_expression(args, in, out);
+        if(primary_expression(args, in, out)) {
+            /* fetch rvalue */
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        }
         is_lvalue = true;
         break;
 
