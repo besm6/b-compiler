@@ -16,8 +16,8 @@
 #include <sys/wait.h>
 
 #define ASSERT_CHAR(args, in, expect, ...) do {     \
-    char c;                                         \
-    if((c = fgetc(in)) != expect) {                 \
+    char _c;                                        \
+    if((_c = fgetc(in)) != expect) {                \
         eprintf(args->arg0, __VA_ARGS__);           \
         exit(1);                                    \
     }} while(0)
@@ -139,7 +139,7 @@ int compile(struct compiler_args *args)
             "ld",
             "-static", "-nostdlib",
             obj_file,
-            "-L.", "-L/lib64", "-L/usr/local/lib",
+            args->lib_dir, "-L/lib64", "-L/usr/local/lib",
             "-lb",
             "-o", args->output_file,
             "-z", "noexecstack",
@@ -158,6 +158,13 @@ int compile(struct compiler_args *args)
 
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
 {
+    fprintf(stdout, "%s", p_name);
+    for (unsigned i = 1; p_arg[i]; i++) {
+        fprintf(stdout, " %s", p_arg[i]);
+    }
+    fprintf(stdout, "\n");
+    fflush(stdout);
+
     pid_t pid = fork();
 
     if(pid < 0)

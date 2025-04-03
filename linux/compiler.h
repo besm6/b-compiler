@@ -18,6 +18,7 @@
 
 struct compiler_args {
     const char *arg0; /* name of the executable */
+    char *lib_dir; /* location of B library */
     char *output_file; /* output file */
     char **input_files; /* input files */
     int num_input_files; /* number of input files */
