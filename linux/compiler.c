@@ -320,6 +320,7 @@ static intptr_t number(struct compiler_args *args, FILE *in)
 
 //
 // Parse a multi-character literal.
+// Return value.
 //
 static intptr_t character(struct compiler_args *args, FILE *in)
 {
@@ -1251,12 +1252,10 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                 }
 
                 // align stack to 16 bytes
-                if (args->stack_offset % 2)
-                {
+                if (args->stack_offset % 2) {
                     fprintf(out, "  sub $%u, %%rsp\n", args->word_size);
                     args->stack_offset++;
                 }
-
                 return;
             }
             else {
