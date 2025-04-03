@@ -28,13 +28,13 @@ static void run_command(std::string &result, const std::string &cmd)
 std::string bcause::compile_and_run(const std::string &source_code)
 {
     const auto b_filename   = test_name + ".b";
-    const auto exe_filename = test_name + ".exe";
+    const auto exe_filename = test_name;
 
     create_file(b_filename, source_code);
 
     // Compile B source into executable binary.
     std::string result;
-    run_command(result, "../bcause -L.. " + b_filename + " -o " + exe_filename);
+    run_command(result, "../bcause -save-temps -L.. " + b_filename + " -o " + exe_filename);
 
     // Run the binary.
     run_command(result, "./" + exe_filename);

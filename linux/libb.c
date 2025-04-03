@@ -68,7 +68,6 @@ void B_FN(printn)(B_TYPE n, B_TYPE b);
 
 /* The `main` function must be declared in any B program */
 extern B_TYPE B_FN(main)(void);
-void B_FN(exit)(void);
 
 /* entry point of any B program */
 void _start(void) __asm__ ("_start"); /* assure, that _start is really named _start in asm */
@@ -77,15 +76,15 @@ void _start(void) {
     syscall1(SYS_exit, code);
 }
 
+/* The current process is terminated. */
+void B_FN(exit)(void) {
+    syscall1(SYS_exit, 0);
+}
+
 /* The i-th character of the string is returned */
 B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) __asm__ ("char"); /* alias name */
 B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) {
     return ((char*) string)[i];
-}
-
-/* The current process is terminated. */
-void B_FN(exit)(void) {
-    syscall1(SYS_exit, 0);
 }
 
 /* The character char is stored in the i-th character of the string. */

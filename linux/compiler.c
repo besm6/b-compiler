@@ -283,14 +283,11 @@ static intptr_t character(struct compiler_args *args, FILE *in) {
     char c = 0;
     int i;
     intptr_t value = 0;
-//fprintf(stderr, "---");
 
     for(i = 0; i < args->word_size; i++) {
         if((c = fgetc(in)) == '\'') {
-//fprintf(stderr, " return %jx\n", value);
             return value;
         }
-//fprintf(stderr, " '%c'", c);
 
         if(c == '*') {
             switch(c = fgetc(in)) {
@@ -328,7 +325,6 @@ static intptr_t character(struct compiler_args *args, FILE *in) {
         exit(1);
     }
 
-//fprintf(stderr, " return %jx\n", value);
     return value;
 }
 
