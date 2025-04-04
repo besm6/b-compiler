@@ -150,16 +150,104 @@ assign global 42
     EXPECT_EQ(output, expect);
 }
 
-#if 0
 TEST_F(bcause, array_indexing)
 {
     auto output = compile_and_run(R"(
+        g[3] -345, 'foo', "bar";
+
         main() {
-            /* TODO */
+            extrn g;
+            auto l[3];
+
+            l[0] = 123;
+            l[1] = 'local';
+            l[2] = "string";
+            printf("global = %d, '%c', *"%s*"*n", g[0], g[1], g[2]);
+            printf("local = %d, '%c', *"%s*"*n", l[0], l[1], l[2]);
         }
     )");
-    const std::string expect = R"(TODO
+    const std::string expect = R"(global = -345, 'foo', "bar"
+local = 123, 'local', "string"
 )";
     EXPECT_EQ(output, expect);
 }
-#endif
+
+TEST_F(bcause, binary_operators)
+{
+    auto output = compile_and_run(R"(
+        x 42;
+
+        main() {
+            extrn x;
+            auto y;
+
+            y = 345;
+            printf("%d + %d -> %d*n", x, y, x + y);
+            printf("%d + %d -> %d*n", y, x, y + x);
+
+            printf("%d - %d -> %d*n", x, y, x - y);
+            printf("%d - %d -> %d*n", y, x, y - x);
+
+            printf("%d ** %d -> %d*n", x, y, x * y);
+            printf("%d ** %d -> %d*n", y, x, y * x);
+
+            printf("%d / %d -> %d*n", x, y, x / y);
+            printf("%d / %d -> %d*n", y, x, y / x);
+
+            printf("%d %% %d -> %d*n", x, y, x % y);
+            printf("%d %% %d -> %d*n", y, x, y % x);
+
+            printf("%d < %d -> %d*n", x, y, x < y);
+            printf("%d < %d -> %d*n", y, x, y < x);
+
+            printf("%d <= %d -> %d*n", x, y, x <= y);
+            printf("%d <= %d -> %d*n", y, x, y <= x);
+
+            printf("%d > %d -> %d*n", x, y, x > y);
+            printf("%d > %d -> %d*n", y, x, y > x);
+
+            printf("%d >= %d -> %d*n", x, y, x >= y);
+            printf("%d >= %d -> %d*n", y, x, y >= x);
+
+            printf("%d == %d -> %d*n", x, y, x == y);
+            printf("%d == %d -> %d*n", y, x, y == x);
+
+            printf("%d != %d -> %d*n", x, y, x != y);
+            printf("%d != %d -> %d*n", y, x, y != x);
+
+            printf("%d & %d -> %d*n", x, y, x & y);
+            printf("%d & %d -> %d*n", y, x, y & x);
+
+            printf("%d | %d -> %d*n", x, y, x | y);
+            printf("%d | %d -> %d*n", y, x, y | x);
+        }
+    )");
+    const std::string expect = R"(42 + 345 -> 387
+345 + 42 -> 387
+42 - 345 -> -303
+345 - 42 -> 303
+42 * 345 -> 14490
+345 * 42 -> 14490
+42 / 345 -> 0
+345 / 42 -> 8
+42 % 345 -> 42
+345 % 42 -> 9
+42 < 345 -> 1
+345 < 42 -> 0
+42 <= 345 -> 1
+345 <= 42 -> 0
+42 > 345 -> 0
+345 > 42 -> 1
+42 >= 345 -> 0
+345 >= 42 -> 1
+42 == 345 -> 0
+345 == 42 -> 0
+42 != 345 -> 1
+345 != 42 -> 1
+42 & 345 -> 8
+345 & 42 -> 8
+42 | 345 -> 379
+345 | 42 -> 379
+)";
+    EXPECT_EQ(output, expect);
+}
