@@ -1,9 +1,9 @@
-PROG    = b7
-SRC     = b.b
+PROG    = b7 bc7
+CFLAGS  = -O -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
 
-all:    ${PROG} #b.s
+all:    ${PROG} bc.s #b.s
 
 install:
 
@@ -17,10 +17,22 @@ test:   build
 build:
 	cmake -B build tests
 
-${PROG}: ${SRC}
+#
+# Build B compiler from B source
+#
+b7:     b.b
 	bcause $< -o $@
 	nm -n $@ > b.nm
 	objdump -S $@ > b.dis
 
-b.s:    ${PROG} ${SRC}
-	./${PROG} < ${SRC} > $@
+#
+# Build B compiler from C source
+#
+bc7:    b.c
+	$(CC) $(CFLAGS) $< -o $@
+
+bc.s:   bc7 b.b
+	./bc7 < b.b > $@
+
+b.s:    b7 b.b
+	./b7 < b.b > $@
