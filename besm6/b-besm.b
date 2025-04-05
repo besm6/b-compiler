@@ -1,23 +1,8 @@
-/* b.b - B compiler for PDP-7 Unix
-
-   Coding style and organization based on lastc1120c.c
-  
-   (C) 2016 Robert Swierczek, GPL3
-  
-   To compile the compiler with b.c:
-      gcc -Wno-multichar b.c -o b
-      ./b b.b b.s
-      perl as7 --out b.out bl.s b.s bi.s
-
-   To compile hello.b:
-      perl a7out b.out hello.b hello.s
-      perl as7 --out h.out bl.s hello.s bi.s
-      perl a7out h.out
-   
-   To compile the compiler with itself:
-      perl a7out b.out b.b b2.s
-      perl as7 --out b2.out bl.s b2.s bi.s
-*/
+/*
+ * B compiler for BESM-6.
+ *
+ * TODO: generate Madlen assembly code.
+ */
 
 main() {
   extrn symtab, eof, ns;
@@ -83,12 +68,12 @@ symbol() {
   }
 loop:
   ct = ctab[c];
- 
+
   if (ct==0) { /* eof */
     eof = 1;
     return(0);
   }
- 
+
   if (ct==126) { /* white space */
     if (c=='*n')
       line = line+1;
@@ -231,7 +216,7 @@ mapch(c) {
 
   if ((a=read())==c)
     return(-1);
- 
+
   if (a=='*n' | a==0 | a==4) {
     error('cc');
     peekc = a;
@@ -270,7 +255,7 @@ expr(lev) {
   auto o;
 
   o = symbol();
- 
+
   if (o==21) { /* number */
 case21:
     if ((cval & 017777)==cval) {
@@ -295,9 +280,9 @@ case21:
     getstr();
     write('2:');
     write('*n');
-    goto loop; 
+    goto loop;
   }
-  
+
   if (o==20) { /* name */
     if (*csym==0) { /* not seen */
       if ((peeksym=symbol())==6) { /* ( */
@@ -324,7 +309,7 @@ case21:
     }
     goto loop;
   }
- 
+
   if (o==34) { /* ! */
     expr(1);
     gen('u',4); /* unot */
@@ -342,19 +327,19 @@ case21:
     gen('u',2); /* umin */
     goto loop;
   }
- 
+
   if (o==47) { /* & */
     expr(1);
     gen('u',1); /* uadr */
     goto loop;
   }
- 
+
   if (o==42) { /* * */
     expr(1);
     gen('u',3); /* uind */
     goto loop;
   }
- 
+
   if (o==6) { /* ( */
     peeksym = o;
     pexpr();
@@ -431,7 +416,7 @@ loop:
     }
     goto loop;
   }
- 
+
   peeksym = o;
 }
 
@@ -489,7 +474,7 @@ extdef() {
   name(csym + 2);
   write(':');
   o=symbol();
- 
+
   if (o==2 | o==6) { /* $( ( */
     write('.+');
     write('1*n');
@@ -598,10 +583,10 @@ next:
     error('fe'); /* Unexpected eof */
     return;
   }
- 
+
   if (o==1 | o==3) /* ; $) */
     return;
- 
+
   if (o==2) { /* $( */
     stmtlist();
     return;

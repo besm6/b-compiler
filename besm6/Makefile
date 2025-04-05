@@ -1,25 +1,38 @@
+PROG    = bbesm bcbesm
+CFLAGS  = -O -Wall -Werror -Wno-multichar
 
-CFLAGS      = -O -Werror
-NO_WARNINGS = -Wno-multichar \
-              -Wno-implicit-int \
-              -Wno-implicit-function-declaration \
-              -Wno-unused-result \
-              -Wno-return-type \
-              -Wno-parentheses
+.PHONY: all install clean test
 
-all:    b hello.s b.s test1.s
+all:    $(PROG) hello.madlen test1.madlen
 
-b:      b-proto.c
-	gcc $(CFLAGS) $(NO_WARNINGS) $< -o $@
+install:
 
 clean:
-	rm -f b hello.s b.s
+	rm -f ${PROG} *.s *.nm *.dis *.trace
 
-hello.s: b hello.b
-	./b hello.b hello.s
+test:   build
+	make -C build btest
+	make -C build test
 
-b.s:    b b-compiler.b
-	./b b-compiler.b b.s
+build:
+	cmake -B build tests
 
-test1.s: b test1.b
-	./b test1.b test1.s
+#
+# Build B compiler from B source
+#
+bbesm:  b-besm.b
+	bcause $< -o $@
+	nm -n $@ > b.nm
+	objdump -S $@ > b.dis
+
+#
+# Build B compiler from C source
+#
+bcbesm: b-proto.c
+	$(CC) $(CFLAGS) $< -o $@
+
+hello.madlen: bcbesm ../examples/hello.b
+	./bcbesm < ../examples/hello.b > $@
+
+test1.madlen: bcbesm test1.b
+	./bcbesm < test1.b > $@
