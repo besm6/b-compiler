@@ -8,7 +8,7 @@ all:    ${PROG} bc.s #b.s
 install:
 
 clean:
-	rm -f ${PROG} b.s *.nm *.dis *.trace
+	rm -f ${PROG} *.s *.nm *.dis *.trace
 
 test:   build
 	make -C build btest
