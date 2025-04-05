@@ -14,7 +14,7 @@ TEST_F(bcause, global_scalars)
 
             printf("a = %d*n", a);
             printf("b = %d*n", b);
-            printf("c = %d, '%c', *"%s*"*n", c[0], c[1], c[2]);
+            printf("c = %d, '%c', *"%s*"*n", c, (&c)[1], (&c)[2]);
         }
     )");
     const std::string expect = R"(a = 0
@@ -34,8 +34,8 @@ TEST_F(bcause, global_vectors)
         main() {
             extrn a, b, c;
 
-            printf("a = %d*n", a);
-            printf("b = %d*n", b);
+            printf("a = %d*n", a[1]);
+            printf("b = %d*n", b[0]);
             printf("c = %d, '%c', *"%s*", %d*n", c[0], c[1], c[2], c[3]);
         }
     )");
@@ -60,8 +60,8 @@ TEST_F(bcause, local_scalars)
         }
     )");
     const std::string expect = R"(offset a = 0
-offset b = -992
-offset c = -1952
+offset b = -968
+offset c = -984
 )";
     EXPECT_EQ(output, expect);
 }
@@ -80,8 +80,8 @@ TEST_F(bcause, local_vectors)
         }
     )");
     const std::string expect = R"(offset a = 0
-offset b = 0
-offset c = -992
+offset b = -1000
+offset c = -1008
 )";
     EXPECT_EQ(output, expect);
 }

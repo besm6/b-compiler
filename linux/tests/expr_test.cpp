@@ -150,24 +150,35 @@ assign global 42
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(bcause, array_indexing)
+TEST_F(bcause, local_array)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            auto l[3];
+
+            l[0] = 123;
+            l[1] = 'local';
+            l[2] = "string";
+            printf("local = %d, '%c', *"%s*"*n", l[0], l[1], l[2]);
+        }
+    )");
+    const std::string expect = R"(local = 123, 'local', "string"
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(bcause, global_array)
 {
     auto output = compile_and_run(R"(
         g[3] -345, 'foo', "bar";
 
         main() {
             extrn g;
-            auto l[3];
 
-            l[0] = 123;
-            l[1] = 'local';
-            l[2] = "string";
             printf("global = %d, '%c', *"%s*"*n", g[0], g[1], g[2]);
-            printf("local = %d, '%c', *"%s*"*n", l[0], l[1], l[2]);
         }
     )");
     const std::string expect = R"(global = -345, 'foo', "bar"
-local = 123, 'local', "string"
 )";
     EXPECT_EQ(output, expect);
 }

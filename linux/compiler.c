@@ -59,7 +59,7 @@ struct stack_var {
 //
 // Allocate structure for a stack variable.
 //
-inline static struct stack_var* init_stack_var(const char* name, unsigned long offset)
+static struct stack_var* init_stack_var(const char* name, unsigned long offset)
 {
     struct stack_var* ptr = (struct stack_var*) malloc(sizeof(struct stack_var));
     ptr->name = strdup(name);
@@ -70,14 +70,14 @@ inline static struct stack_var* init_stack_var(const char* name, unsigned long o
 //
 // Deallocate a stack variable structure.
 //
-inline static void free_stack_var(struct stack_var* ptr)
+static void free_stack_var(struct stack_var* ptr)
 {
     free(ptr->name);
     free(ptr);
 }
 
-static bool expression(struct compiler_args *args, FILE *in, FILE *out);
-static inline bool rvalue(struct compiler_args *args, FILE *in, FILE *out);
+static void expression(struct compiler_args *args, FILE *in, FILE *out);
+static void rvalue(struct compiler_args *args, FILE *in, FILE *out);
 static void declarations(struct compiler_args *args, FILE *in, FILE *buffer);
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg);
 
@@ -228,7 +228,7 @@ static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
 // Parse a comment.
 // It starts with /* and finishes with */.
 //
-static inline void comment(struct compiler_args *args, FILE *in)
+static void comment(struct compiler_args *args, FILE *in)
 {
     char c;
 
@@ -529,7 +529,8 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
     fprintf(out,
         ".data\n.type %s, @object\n"
         ".align %d\n"
-        "%s:\n",
+        "%s:\n"
+        "  .quad .+8\n",
         identifier, args->word_size, identifier
     );
 
@@ -749,7 +750,11 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         return false;
 
     case '[': /* index operator */
-        fprintf(out, "  push %%rax\n");
+        if (left_is_lvalue) {
+            fprintf(out, "  push (%%rax)\n");
+        } else {
+            fprintf(out, "  push %%rax\n");
+        }
         expression(args, in, out);
         fprintf(out, "  pop %%rdi\n  shl $3, %%rax\n  add %%rdi, %%rax\n");
 
@@ -790,13 +795,25 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         is_lvalue = operator(args, in, out, false);
         break;
 
-    default:
-        bin_op:
+    case '*':
+    case '/':
+    case '%':
+    case '<':
+    case '>':
+    case '!':
+    case '&':
+    case '|':
+bin_op:
         if (left_is_lvalue)
             fprintf(out, "  mov (%%rax), %%rax\n");
 
-        if (!bin_op(args, in, out, c))
-            return left_is_lvalue;
+        bin_op(args, in, out, c);
+        break;
+
+    default:
+        ungetc(c, in);
+        is_lvalue = left_is_lvalue;
+        break;
     }
 
     return is_lvalue;
@@ -968,22 +985,26 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
 //
 // Parse rvalue.
 //
-static inline bool rvalue(struct compiler_args *args, FILE *in, FILE *out)
+static void rvalue(struct compiler_args *args, FILE *in, FILE *out)
 {
-    return operator(args, in, out, primary_expression(args, in, out));
+    if (operator(args, in, out, primary_expression(args, in, out))) {
+
+        // Transform lvalue to rvalue.
+        fprintf(out, "  mov (%%rax), %%rax\n");
+    }
 }
 
 //
 // Parse expression.
 // Return true when it's an lvalue (address of the value).
 //
-static bool expression(struct compiler_args *args, FILE *in, FILE *out)
+static void expression(struct compiler_args *args, FILE *in, FILE *out)
 {
     char c;
     static size_t conditional = 0;
     size_t this_conditional;
-    bool is_lvalue = operator(args, in, out, primary_expression(args, in, out));
 
+    rvalue(args, in, out);
     whitespace(args, in);
     switch (c = fgetc(in)) {
     case '?': /* ternary operators have the lowest precedence, so they need to be resolved here */
@@ -998,10 +1019,10 @@ static bool expression(struct compiler_args *args, FILE *in, FILE *out)
         fprintf(out, "  jmp .L.cond.end.%ld\n.L.cond.else.%ld:\n", this_conditional, this_conditional);
         expression(args, in, out);
         fprintf(out, ".L.cond.end.%ld:\n", this_conditional);
-        return false;
+        break;
     default:
         ungetc(c, in);
-        return is_lvalue;
+        break;
     }
 }
 
@@ -1209,10 +1230,13 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                         eprintf(args->arg0, "expect identifier after " QUOTE_FMT("auto") "\n");
                         exit(1);
                     }
+                    if (find_identifier(args, buffer, NULL) >= 0) {
+                        eprintf(args->arg0, "identifier " QUOTE_FMT("%s") " is already defined in this scope\n", buffer);
+                        exit(1);
+                    }
                     whitespace(args, in);
 
-                    // default 'auto' vector size is 1;
-                    value = 1;
+                    value = -1;
                     if ((c = fgetc(in)) == '\'') {
                         value = character(args, in);
                         whitespace(args, in);
@@ -1235,17 +1259,21 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                         c = fgetc(in);
                     }
 
-                    if (find_identifier(args, buffer, NULL) >= 0) {
-                        eprintf(args->arg0, "identifier " QUOTE_FMT("%s") " is already defined in this scope\n", buffer);
-                        exit(1);
+                    if (value < 0) {
+                        // Scalar.
+                        list_push(&args->locals, init_stack_var(buffer, args->stack_offset));
+                        args->stack_offset += 1;
+                        fprintf(out, "  sub $%u, %%rsp\n", args->word_size);
+                    } else {
+                        // Vector.
+                        list_push(&args->locals, init_stack_var(buffer, args->stack_offset + value));
+                        args->stack_offset += value + 1;
+                        fprintf(out, "  sub $%lu, %%rsp\n", args->word_size * (value + 1));
+
+                        // Initialize pointer.
+                        fprintf(out, "  lea -%lu(%%rbp), %%rax\n", args->stack_offset * args->word_size);
+                        fprintf(out, "  movq %%rax, -%lu(%%rbp)\n", (args->stack_offset + 1) * args->word_size);
                     }
-
-                    list_push(&args->locals, init_stack_var(buffer, args->stack_offset));
-                    args->stack_offset += value;
-
-                    fprintf(out, "  sub $%lu, %%rsp\n", args->word_size * value);
-                   // while (value--)
-                   //     fprintf(out, "  movq $0, -%lu(%%rbp)\n", (args->stack_items - value) * args->word_size);
                 } while ((c) == ',');
 
                 if (c != ';') {
