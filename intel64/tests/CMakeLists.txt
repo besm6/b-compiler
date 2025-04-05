@@ -38,5 +38,9 @@ add_executable(btest EXCLUDE_FROM_ALL
     func_test.cpp
     expr_test.cpp
     string_test.cpp
+    hello_test.cpp
+    e2_test.cpp
+    fibonacci_test.cpp
+    fizzbuzz_test.cpp
 )
 gtest_discover_tests(btest EXTRA_ARGS --gtest_repeat=1 PROPERTIES TIMEOUT 120)
