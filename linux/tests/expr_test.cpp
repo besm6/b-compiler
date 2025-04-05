@@ -183,6 +183,33 @@ TEST_F(bcause, global_array)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(bcause, local_mix)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            auto e, d;
+            auto c[1];
+            auto b, a;
+
+            a = 11;
+            b = 22;
+            c[0] = 33;
+            d = 44;
+            e = 55;
+
+            printf("%d %d %d %d", a, b, c - &c, c[0]);
+            printf(" %d %d*n", d, e);
+
+            printf("%d %d %d %d", (&a)[0], (&a)[1], (&a)[2] - &c, (&a)[3]);
+            printf(" %d %d*n", (&a)[4], (&a)[5]);
+        }
+    )");
+    const std::string expect = R"(11 22 8 33 44 55
+11 22 8 33 44 55
+)";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(bcause, binary_operators)
 {
     auto output = compile_and_run(R"(
