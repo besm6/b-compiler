@@ -10,7 +10,7 @@ install:
 clean:
 	rm -f ${PROG} *.s *.nm *.dis *.trace
 
-test:   build
+test:   build b7
 	make -C build btest
 	make -C build test
 
