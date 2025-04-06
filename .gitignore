@@ -9,6 +9,7 @@ fibonacci
 fizzbuzz
 hello
 helloworld
+tmp
 *.s
 *.a
 *.o

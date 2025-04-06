@@ -54,9 +54,9 @@ TEST_F(bcause, local_scalars)
             auto b 'x';
             auto c;
 
-            printf("offset a = %d*n", &a - &a);
-            printf("offset b = %d*n", &b - &a);
-            printf("offset c = %d*n", &c - &a);
+            printf("offset a = %d*n", (&a) - &a);
+            printf("offset b = %d*n", (&b) - &a);
+            printf("offset c = %d*n", (&c) - &a);
         }
     )");
     const std::string expect = R"(offset a = 0
@@ -74,9 +74,9 @@ TEST_F(bcause, local_vectors)
             auto b[123];
             auto c[];
 
-            printf("offset a = %d*n", &a - &a);
-            printf("offset b = %d*n", &b - &a);
-            printf("offset c = %d*n", &c - &a);
+            printf("offset a = %d*n", (&a) - &a);
+            printf("offset b = %d*n", (&b) - &a);
+            printf("offset c = %d*n", (&c) - &a);
         }
     )");
     const std::string expect = R"(offset a = 0

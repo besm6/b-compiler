@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <cstring>
+#include <filesystem>
 
 static void run_command(std::string &result, const std::string &cmd)
 {
@@ -31,6 +32,7 @@ std::string bcause::compile_and_run(const std::string &source_code)
     const auto exe_filename = test_name;
 
     create_file(b_filename, source_code);
+    std::filesystem::remove(exe_filename);
 
     // Compile B source into executable binary.
     std::string result;

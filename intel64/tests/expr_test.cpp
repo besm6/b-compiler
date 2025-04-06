@@ -176,9 +176,11 @@ TEST_F(bcause, global_array)
             extrn g;
 
             printf("global = %d, '%c', *"%s*"*n", g[0], g[1], g[2]);
+            printf("address = %d, %d, %d*n", (&g[0]) - g, (&g[1]) - g, (&g[2]) - g);
         }
     )");
     const std::string expect = R"(global = -345, 'foo', "bar"
+address = 0, 8, 16
 )";
     EXPECT_EQ(output, expect);
 }

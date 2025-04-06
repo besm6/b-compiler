@@ -23,7 +23,7 @@ main() {
   extrn symtab, eof, ns;
 
   while (!eof) {
-    ns = symtab + 51;
+    ns = &symtab[51];
     extdef();
     blkend();
   }
@@ -35,32 +35,32 @@ lookup() {
 
   rp = symtab;
   while (rp < ns) {
-    np = rp + 2;
+    np = &rp[2];
     sp = symbuf;
     while (*np==*sp) {
       if (!*np)
         return(rp);
-      np = np+1;
-      sp = sp+1;
+      np = &np[1];
+      sp = &sp[1];
     }
     while (*np)
-      np = np+1;
-    rp = np+1;
+      np = &np[1];
+    rp = &np[1];
   }
   sp = symbuf;
-  if (ns >= symtab + 290) {
+  if (ns >= &symtab[290]) {
     error('sf');
     eof = 1;
     return(rp);
   }
   *ns = 0;
   ns[1] = 0;
-  ns = ns+2;
+  ns = &ns[2];
   while (*ns = *sp) {
-    ns = ns+1;
-    sp = sp+1;
+    ns = &ns[1];
+    sp = &sp[1];
   }
-  ns = ns+1;
+  ns = &ns[1];
   return(rp);
 }
 
@@ -155,9 +155,9 @@ com1:
   if (ct==123) { /* letter */
     sp = symbuf;
     while(ct==123 | ct==124) {
-      if (sp<symbuf+9) {
+      if (sp < &symbuf[9]) {
         *sp = c;
-        sp = sp+1;
+        sp = &sp[1];
       }
       ct = ctab[c = read()];
     }
@@ -199,7 +199,7 @@ getcc() {
   cval = c;
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval * 512 + c;
+  cval = cval * 256 + c;
   if (mapch('*'') >= 0)
     error('cc');
 }
@@ -314,7 +314,7 @@ case21:
       write('x ');
       if (*csym==6) { /* extrn */
         write('.');
-        name(csym+2);
+        name(&csym[2]);
       } else { /* internal */
         write('1f');
         write('+');
@@ -486,7 +486,7 @@ extdef() {
 
   csym[0] = 6; /* extrn */
   write('.');
-  name(csym + 2);
+  name(&csym[2]);
   write(':');
   o=symbol();
 
@@ -755,7 +755,7 @@ number(x) {
 name(s) {
   while (*s) {
     write(*s);
-    s = s+1;
+    s = &s[1];
   }
 }
 
@@ -774,7 +774,7 @@ error(code) {
   write(code);
   write(' ');
   if (code=='rd' | code=='un') {
-    name(csym + 2);
+    name(&csym[2]);
     write(' ');
   }
   printn(line);

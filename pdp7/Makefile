@@ -1,5 +1,5 @@
 PROG    = b7 bc7
-CFLAGS  = -O -Wall -Werror -Wno-multichar
+CFLAGS  = -O -g -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
 
@@ -22,6 +22,7 @@ build:
 #
 b7:     b.b
 	bcause $< -o $@
+	bcause $< -S -o b7.s
 	nm -n $@ > b.nm
 	objdump -S $@ > b.dis
 

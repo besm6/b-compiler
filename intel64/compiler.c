@@ -507,14 +507,14 @@ static void global(struct compiler_args *args, FILE *in, FILE *out, char *identi
 //
 static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identifier)
 {
-    intptr_t num = 0;
+    intptr_t nwords = 0;
     char c;
 
     whitespace(args, in);
     if ((c = fgetc(in)) != ']') {
         ungetc(c, in);
-        num = number(args, in);
-        if (num == EOF) {
+        nwords = number(args, in);
+        if (nwords == EOF) {
             eprintf(args->arg0, "unexpected end of file, expect vector size after " QUOTE_FMT("[") "\n");
             exit(1);
         }
@@ -542,6 +542,7 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
             whitespace(args, in);
             ival(args, in, out);
             whitespace(args, in);
+            nwords--;
         } while ((c = fgetc(in)) == ',');
 
         if (c != ';') {
@@ -549,8 +550,9 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
             exit(1);
         }
     }
-    else if ((args->word_size * num) != 0)
-        fprintf(out, "  .zero %ld\n", args->word_size * num);
+
+    if (nwords > 0)
+        fprintf(out, "  .zero %ld\n", args->word_size * nwords);
 }
 
 //
@@ -928,7 +930,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '&': /* address operator */
-        if (!primary_expression(args, in, out)) {
+        if (!operator(args, in, out, primary_expression(args, in, out))) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("&") "\n");
             exit(1);
         }
@@ -987,9 +989,9 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
 //
 static void rvalue(struct compiler_args *args, FILE *in, FILE *out)
 {
-    if (operator(args, in, out, primary_expression(args, in, out))) {
-
-        // Transform lvalue to rvalue.
+    bool is_lvalue = operator(args, in, out, primary_expression(args, in, out));
+    if (is_lvalue) {
+        /* fetch rvalue */
         fprintf(out, "  mov (%%rax), %%rax\n");
     }
 }
