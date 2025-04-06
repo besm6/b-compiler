@@ -10,13 +10,27 @@ TEST_F(pdp7, global_var)
     EXPECT_EQ(output, ".foo:0\n");
 }
 
-TEST_F(pdp7, DISABLED_global_scalars)
+TEST_F(pdp7, global_line_1)
+{
+    auto output = compile(R"(
+        line 1;
+    )");
+    EXPECT_EQ(output, ".line:1\n");
+}
+
+TEST_F(pdp7, global_peeksym_minus_1)
 {
     auto output = compile(R"(
         peeksym -1;
+    )");
+    EXPECT_EQ(output, ".peeksym:-1\n");
+}
+
+TEST_F(pdp7, global_scalars)
+{
+    auto output = compile(R"(
         peekc;
         eof;
-        line 1;
         csym;
         ns;
         cval;
@@ -24,24 +38,30 @@ TEST_F(pdp7, DISABLED_global_scalars)
         nerror;
         nauto;
     )");
-    const std::string expect = R"(
-TODO
+    const std::string expect = R"(.peekc:0
+.eof:0
+.csym:0
+.ns:0
+.cval:0
+.isn:0
+.nerror:0
+.nauto:0
 )";
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(pdp7, DISABLED_global_symbuf)
+TEST_F(pdp7, global_symbuf)
 {
     auto output = compile(R"(
         symbuf[10];
     )");
-    const std::string expect = R"(
-TODO
+    const std::string expect = R"(.symbuf:.+1
+.=.+10
 )";
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(pdp7, DISABLED_global_ctab)
+TEST_F(pdp7, global_ctab)
 {
     auto output = compile(R"(
         ctab[]
@@ -62,13 +82,140 @@ TEST_F(pdp7, DISABLED_global_ctab)
           123,123,123,123,123,123,123,123,  /*  p   q   r   s   t   u   v   w  */
           123,123,123,  2, 48,  3,127,127;  /*  x   y   z   {   |   }   ~  DEL */
     )");
-    const std::string expect = R"(
-TODO
+    const std::string expect = R"(.ctab:.+1
+0
+127
+127
+127
+0
+127
+127
+127
+127
+126
+126
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+127
+126
+34
+122
+127
+127
+44
+47
+121
+6
+7
+42
+40
+9
+41
+127
+43
+124
+124
+124
+124
+124
+124
+124
+124
+124
+124
+8
+1
+63
+80
+65
+90
+127
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+4
+127
+5
+48
+127
+127
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+123
+2
+48
+3
+127
+127
 )";
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(pdp7, DISABLED_global_symtab)
+TEST_F(pdp7, global_symtab)
 {
     auto output = compile(R"(
         symtab[300] /* class value name */
@@ -80,8 +227,59 @@ TEST_F(pdp7, DISABLED_global_symtab)
           1,13,'w','h','i','l','e', 0 ,
           1,14,'e','l','s','e', 0 ;
     )");
-    const std::string expect = R"(
-TODO
+    const std::string expect = R"(.symtab:.+1
+1
+5
+97
+117
+116
+111
+0
+1
+6
+101
+120
+116
+114
+110
+0
+1
+10
+103
+111
+116
+111
+0
+1
+11
+114
+101
+116
+117
+114
+110
+0
+1
+12
+105
+102
+0
+1
+13
+119
+104
+105
+108
+101
+0
+1
+14
+101
+108
+115
+101
+0
+.=.+249
 )";
     EXPECT_EQ(output, expect);
 }
