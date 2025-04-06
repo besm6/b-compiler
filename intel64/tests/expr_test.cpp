@@ -192,6 +192,7 @@ TEST_F(bcause, local_mix)
             auto e, d;
             auto c[1];
             auto b, a;
+            auto p;
 
             a = 11;
             b = 22;
@@ -201,9 +202,9 @@ TEST_F(bcause, local_mix)
 
             printf("%d %d %d %d", a, b, c - &c, c[0]);
             printf(" %d %d*n", d, e);
-
-            printf("%d %d %d %d", (&a)[0], (&a)[1], (&a)[2] - &c, (&a)[3]);
-            printf(" %d %d*n", (&a)[4], (&a)[5]);
+            p = &a;
+            printf("%d %d %d %d", p[0], p[1], p[2] - &c, p[3]);
+            printf(" %d %d*n", p[4], p[5]);
         }
     )");
     const std::string expect = R"(11 22 8 33 44 55

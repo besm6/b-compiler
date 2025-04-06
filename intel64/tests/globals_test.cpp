@@ -14,7 +14,8 @@ TEST_F(bcause, global_scalars)
 
             printf("a = %d*n", a);
             printf("b = %d*n", b);
-            printf("c = %d, '%c', *"%s*"*n", c, (&c)[1], (&c)[2]);
+            a = &c;
+            printf("c = %d, '%c', *"%s*"*n", c, a[1], a[2]);
         }
     )");
     const std::string expect = R"(a = 0

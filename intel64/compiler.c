@@ -572,80 +572,31 @@ static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_o
 }
 
 //
-// Parse a postfix operator or a binary operator:
-//      ++      increment
-//      --      decrement
-//      =       assignment
-//      []      array indexing
-//      ()      function call
+// Parse a binary operator.
+// Return true when result is lvalue.
 //
 static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_is_lvalue, int level)
 {
     char c;
-    bool is_lvalue = false;
-    int num_args = 0;
 
     whitespace(args, in);
     c = fgetc(in);
-    if (c == '+') {
-        if ((c = fgetc(in)) == '+') {
-            /* postfix increment operator */
-            if (!left_is_lvalue) {
-                eprintf(args->arg0, "left operand of " QUOTE_FMT("++") " has to be an lvalue");
-                exit(1);
-            }
-
-            fprintf(out,
-                "  mov (%%rax), %%rcx\n"
-                "  addq $1, (%%rax)\n"
-                "  mov %%rcx, %%rax\n"
-            );
-            is_lvalue = operator(args, in, out, false, level);
-            return is_lvalue;
-        }
-        ungetc(c, in);
-
-        if (level >= 4) {
-            /* addition operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out, 3);
-            fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
-            return false;
-        }
-        ungetc('+', in);
+    if (level >= 4 && c == '+') {
+        /* addition operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 3);
+        fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
         return false;
     }
-    if (c == '-') {
-        c = fgetc(in);
-        if (c == '-') {
-            /* postfix decrement operator */
-            if (!left_is_lvalue) {
-                eprintf(args->arg0, "left operand of " QUOTE_FMT("--") " has to be an lvalue");
-                exit(1);
-            }
-
-            fprintf(out,
-                "  mov (%%rax), %%rcx\n"
-                "  subq $1, (%%rax)\n"
-                "  mov %%rcx, %%rax\n"
-            );
-            is_lvalue = operator(args, in, out, false, level);
-            return is_lvalue;
-        }
-        ungetc(c, in);
-
-        if (level >= 4) {
-            /* subtraction operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out, 3);
-            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
-            return false;
-        }
-        ungetc('-', in);
+    if (level >= 4 && c == '-') {
+        /* subtraction operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 3);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
         return false;
     }
     if (c == '=') {
@@ -669,54 +620,6 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
         rvalue(args, in, out, 13);
         fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
         return false;
-    }
-    if (c == '[') {
-        /* index operator */
-        if (left_is_lvalue) {
-            fprintf(out, "  push (%%rax)\n");
-        } else {
-            fprintf(out, "  push %%rax\n");
-        }
-        expression(args, in, out, 15);
-        fprintf(out, "  pop %%rdi\n  shl $3, %%rax\n  add %%rdi, %%rax\n");
-
-        if ((c = fgetc(in)) != ']') {
-            eprintf(args->arg0, "unexpected token " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT("]") " after index expression\n", c);
-            exit(1);
-        }
-        is_lvalue = operator(args, in, out, true, level);
-        return is_lvalue;
-    }
-    if (c == '(') {
-        /* function call */
-        fprintf(out, "  push %%rax\n");
-
-        while ((c = fgetc(in)) != ')') {
-            ungetc(c, in);
-            expression(args, in, out, 15);
-
-            if (++num_args > MAX_FN_CALL_ARGS) {
-                eprintf(args->arg0, "only %d call arguments are currently supported\n", MAX_FN_CALL_ARGS);
-                exit(1);
-            }
-            fprintf(out, "  push %%rax\n");
-
-            whitespace(args, in);
-            if ((c = fgetc(in)) == ')')
-                break;
-            else if (c == ',')
-                continue;
-
-            eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT(")") " after call expression\n", c);
-            exit(1);
-        }
-
-        while (num_args > 0)
-            fprintf(out, "  pop %s\n", arg_registers[--num_args]);
-
-        fprintf(out, "  pop %%r10\n  call *%%r10\n");
-        is_lvalue = operator(args, in, out, false, level);
-        return is_lvalue;
     }
     if (level >= 3 && c == '*') {
         /* multiplication operator */
@@ -872,6 +775,7 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
     char c;
     intptr_t value;
     bool is_lvalue = false, is_extrn = false;
+    int num_args = 0;
 
     whitespace(args, in);
 
@@ -987,7 +891,87 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
             else
                 fprintf(out, "  lea -%lu(%%rbp), %%rax\n", (value + 2) * args->word_size);
 
-            //TODO: ( [ ++ --
+            switch (c = fgetc(in)) {
+            case '[':
+                /* index operator */
+                fprintf(out, "  push (%%rax)\n");
+                expression(args, in, out, 15);
+                fprintf(out, "  pop %%rdi\n  shl $3, %%rax\n  add %%rdi, %%rax\n");
+
+                if ((c = fgetc(in)) != ']') {
+                    eprintf(args->arg0, "unexpected token " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT("]") " after index expression\n", c);
+                    exit(1);
+                }
+                is_lvalue = true;
+                break;
+
+            case '(':
+                /* function call */
+                fprintf(out, "  push %%rax\n");
+
+                while ((c = fgetc(in)) != ')') {
+                    ungetc(c, in);
+                    expression(args, in, out, 15);
+
+                    if (++num_args > MAX_FN_CALL_ARGS) {
+                        eprintf(args->arg0, "only %d call arguments are currently supported\n", MAX_FN_CALL_ARGS);
+                        exit(1);
+                    }
+                    fprintf(out, "  push %%rax\n");
+
+                    whitespace(args, in);
+                    if ((c = fgetc(in)) == ')')
+                        break;
+                    else if (c == ',')
+                        continue;
+
+                    eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT(")") " after call expression\n", c);
+                    exit(1);
+                }
+
+                while (num_args > 0)
+                    fprintf(out, "  pop %s\n", arg_registers[--num_args]);
+
+                fprintf(out, "  pop %%r10\n  call *%%r10\n");
+                is_lvalue = false;
+                break;
+
+            case '+':
+                if ((c = fgetc(in)) != '+') {
+                    ungetc(c, in);
+                    ungetc('+', in);
+                    break;
+                }
+
+                /* postfix increment operator */
+                fprintf(out,
+                    "  mov (%%rax), %%rcx\n"
+                    "  addq $1, (%%rax)\n"
+                    "  mov %%rcx, %%rax\n"
+                );
+                is_lvalue = false;
+                break;
+
+            case '-':
+                if ((c = fgetc(in)) != '-') {
+                    ungetc(c, in);
+                    ungetc('-', in);
+                    break;
+                }
+
+                /* postfix decrement operator */
+                fprintf(out,
+                    "  mov (%%rax), %%rcx\n"
+                    "  subq $1, (%%rax)\n"
+                    "  mov %%rcx, %%rax\n"
+                );
+                is_lvalue = false;
+                break;
+
+            default:
+                ungetc(c, in);
+                break;
+            }
         }
         else {
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect expression\n", c);
