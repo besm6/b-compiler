@@ -77,7 +77,6 @@ static void free_stack_var(struct stack_var* ptr)
 }
 
 static void expression(struct compiler_args *args, FILE *in, FILE *out, int level);
-static void rvalue(struct compiler_args *args, FILE *in, FILE *out, int level);
 static void declarations(struct compiler_args *args, FILE *in, FILE *buffer);
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg);
 
@@ -230,7 +229,7 @@ static int subprocess(const char *arg0, const char *p_name, char *const *p_arg)
 //
 static void comment(struct compiler_args *args, FILE *in)
 {
-    char c;
+    int c;
 
     while ((c = fgetc(in)) != EOF) {
         if (c == '*') {
@@ -249,7 +248,8 @@ static void comment(struct compiler_args *args, FILE *in)
 //
 static void whitespace(struct compiler_args *args, FILE *in)
 {
-    char c;
+    int c;
+
     while ((c = fgetc(in)) != EOF) {
         if (isspace(c))
             continue;
@@ -277,7 +277,7 @@ static void whitespace(struct compiler_args *args, FILE *in)
 static int identifier(struct compiler_args *args, FILE *in, char* buffer)
 {
     int read = 0;
-    char c;
+    int c;
 
     whitespace(args, in);
 
@@ -299,7 +299,7 @@ static int identifier(struct compiler_args *args, FILE *in, char* buffer)
 static intptr_t number(struct compiler_args *args, FILE *in)
 {
     int read = 0;
-    char c;
+    int c;
     intptr_t num = 0;
 
     whitespace(args, in);
@@ -324,7 +324,7 @@ static intptr_t number(struct compiler_args *args, FILE *in)
 //
 static intptr_t character(struct compiler_args *args, FILE *in)
 {
-    char c = 0;
+    int c = 0;
     int i;
     intptr_t value = 0;
 
@@ -377,7 +377,7 @@ static intptr_t character(struct compiler_args *args, FILE *in)
 //
 static void string(struct compiler_args *args, FILE *in)
 {
-    char c;
+    int c;
     size_t alloc = 32;
     size_t size = 0;
     char *string = (char*) calloc(alloc, sizeof(char));
@@ -431,7 +431,7 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
     intptr_t value;
-    char c = fgetc(in);
+    int c = fgetc(in);
 
     if (isalpha(c)) {
         ungetc(c, in);
@@ -483,7 +483,7 @@ static void global(struct compiler_args *args, FILE *in, FILE *out, char *identi
         identifier, args->word_size, identifier
     );
 
-    char c;
+    int c;
     if ((c = fgetc(in)) != ';') {
         ungetc(c, in);
         do {
@@ -508,7 +508,7 @@ static void global(struct compiler_args *args, FILE *in, FILE *out, char *identi
 static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identifier)
 {
     intptr_t nwords = 0;
-    char c;
+    int c;
 
     whitespace(args, in);
     if ((c = fgetc(in)) != ']') {
@@ -556,187 +556,6 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
 }
 
 //
-// Generate code for a comparison operation.
-//
-static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op)
-{
-    fprintf(out, "  push %%rax\n");
-    expression(args, in, out, op >= CMP_EQ ? 6 : 5);
-    fprintf(out,
-        "  pop %%rdi\n"
-        "  cmp %%rax, %%rdi\n"
-        "  %s %%al\n"
-        "  movzb %%al, %%rax\n",
-        cmp_instruction[op]
-    );
-}
-
-//
-// Parse a binary operator.
-// Return true when result is lvalue.
-//
-static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_is_lvalue, int level)
-{
-    char c;
-
-    whitespace(args, in);
-    c = fgetc(in);
-    if (level >= 4 && c == '+') {
-        /* addition operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 3);
-        fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
-        return false;
-    }
-    if (level >= 4 && c == '-') {
-        /* subtraction operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 3);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
-        return false;
-    }
-    if (c == '=') {
-        c = fgetc(in);
-        if (level >= 7 && c == '=') {
-            /* equality operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            cmp_expr(args, in, out, CMP_EQ);
-            return false;
-        }
-        ungetc(c, in);
-
-        /* assignment operator */
-        if (!left_is_lvalue) {
-            eprintf(args->arg0, "left operand of assignment has to be an lvalue");
-            exit(1);
-        }
-
-        fprintf(out, "  push %%rax\n  mov (%%rax), %%rax\n");
-        rvalue(args, in, out, 13);
-        fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
-        return false;
-    }
-    if (level >= 3 && c == '*') {
-        /* multiplication operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 2);
-        fprintf(out, "  pop %%rdi\n  imul %%rdi, %%rax\n");
-        return false;
-    }
-    if (level >= 3 && c == '/') {
-        /* division operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 2);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-        return false;
-    }
-    if (level >= 3 && c == '%') {
-        /* modulo operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 2);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-        fprintf(out, "  mov %%rdx, %%rax\n");
-        return false;
-    }
-    if (c == '<') {
-        int c2 = fgetc(in);
-        if (level >= 5 && c2 == '<') {
-            /* shift-left operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out, 4);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
-            return false;
-        }
-        if (level >= 6 && c2 == '=') {
-            /* less-than-or-equal operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            cmp_expr(args, in, out, CMP_LE);
-            return false;
-        }
-        ungetc(c2, in);
-        if (level >= 6) {
-            /* less-than operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            cmp_expr(args, in, out, CMP_LT);
-            return false;
-        }
-    }
-    if (c == '>') {
-        int c2 = fgetc(in);
-        if (level >= 5 && c2 == '>') {
-            /* shift-right-operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out, 4);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
-            return false;
-        }
-        if (level >= 6 && c2 == '=') {
-            /* greater-than-or-equal operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            cmp_expr(args, in, out, CMP_GE);
-            return false;
-        }
-        ungetc(c2, in);
-        if (level >= 6) {
-            /* greater-than operator */
-            if (left_is_lvalue)
-                fprintf(out, "  mov (%%rax), %%rax\n");
-            cmp_expr(args, in, out, CMP_GT);
-            return false;
-        }
-    }
-    if (level >= 7 && c == '!') {
-        /* inequality operator */
-        if ((c = fgetc(in)) != '=') {
-            eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c);
-            exit(1);
-        }
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        cmp_expr(args, in, out, CMP_NE);
-        return false;
-    }
-    if (level >= 8 && c == '&') {
-        /* bitwise and operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 7);
-        fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
-        return false;
-    }
-    if (level >= 10 && c == '|') {
-        /* bitwise or operator */
-        if (left_is_lvalue)
-            fprintf(out, "  mov (%%rax), %%rax\n");
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out, 9);
-        fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
-        return false;
-    }
-    ungetc(c, in);
-    return left_is_lvalue;
-}
-
-//
 // Find given name among locals or externs of current function.
 //
 static intptr_t find_identifier(struct compiler_args *args, const char *buffer, bool *is_extrn)
@@ -772,7 +591,7 @@ static intptr_t find_identifier(struct compiler_args *args, const char *buffer, 
 static bool term(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
-    char c;
+    int c;
     intptr_t value;
     bool is_lvalue = false, is_extrn = false;
     int num_args = 0;
@@ -983,47 +802,221 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
 }
 
 //
-// Parse rvalue.
+// Generate code for a comparison operation.
 //
-static void rvalue(struct compiler_args *args, FILE *in, FILE *out, int level)
+static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op)
 {
-    bool is_lvalue = operator(args, in, out, term(args, in, out), level);
-    if (is_lvalue) {
-        /* fetch rvalue */
-        fprintf(out, "  mov (%%rax), %%rax\n");
-    }
+    fprintf(out, "  push %%rax\n");
+    expression(args, in, out, op >= CMP_EQ ? 6 : 5);
+    fprintf(out,
+        "  pop %%rdi\n"
+        "  cmp %%rax, %%rdi\n"
+        "  %s %%al\n"
+        "  movzb %%al, %%rax\n",
+        cmp_instruction[op]
+    );
 }
 
 //
 // Parse expression.
-// Return true when it's an lvalue (address of the value).
+// Allow operations up to the given precedence level.
 //
 static void expression(struct compiler_args *args, FILE *in, FILE *out, int level)
 {
-    char c;
+    bool left_is_lvalue = term(args, in, out);
+    int c, c2;
     static size_t conditional = 0;
-    size_t this_conditional;
 
-    rvalue(args, in, out, level - 1);
-    whitespace(args, in);
-
-    c = fgetc(in);
-    if (level >= 13 && c == '?') {
-        /* ternary operators have the lowest precedence, so they need to be resolved here */
-        this_conditional = conditional++;
-        fprintf(out, "  cmp $0, %%rax\n  je .L.cond.else.%ld\n", this_conditional);
-        expression(args, in, out, 12);
+    for (;;) {
         whitespace(args, in);
-        if ((c = fgetc(in)) != ':') {
-            eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(":") " between conditional branches\n", c);
-            exit(1);
+        c = fgetc(in);
+
+        if (level >= 13 && c == '?') {
+            /* ternary operators have the lowest precedence, so they need to be resolved here */
+            size_t this_conditional = conditional++;
+
+            if (left_is_lvalue) {
+                /* fetch rvalue */
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            }
+            fprintf(out, "  cmp $0, %%rax\n  je .L.cond.else.%ld\n", this_conditional);
+            expression(args, in, out, 12);
+            whitespace(args, in);
+            if ((c2 = fgetc(in)) != ':') {
+                eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(":") " between conditional branches\n", c2);
+                exit(1);
+            }
+            fprintf(out, "  jmp .L.cond.end.%ld\n.L.cond.else.%ld:\n", this_conditional, this_conditional);
+            expression(args, in, out, 13);
+            fprintf(out, ".L.cond.end.%ld:\n", this_conditional);
+            return;
         }
-        fprintf(out, "  jmp .L.cond.end.%ld\n.L.cond.else.%ld:\n", this_conditional, this_conditional);
-        expression(args, in, out, 13);
-        fprintf(out, ".L.cond.end.%ld:\n", this_conditional);
+
+        //
+        // Binary operations, left assosiative.
+        //
+        if (level >= 4 && c == '+') {
+            /* addition operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 3);
+            fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
+            continue;
+        }
+        if (level >= 4 && c == '-') {
+            /* subtraction operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 3);
+            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
+            continue;
+        }
+        if (level >= 3 && c == '*') {
+            /* multiplication operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 2);
+            fprintf(out, "  pop %%rdi\n  imul %%rdi, %%rax\n");
+            continue;
+        }
+        if (level >= 3 && c == '/') {
+            /* division operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 2);
+            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+            continue;
+        }
+        if (level >= 3 && c == '%') {
+            /* modulo operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 2);
+            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+            fprintf(out, "  mov %%rdx, %%rax\n");
+            continue;
+        }
+        if (c == '<') {
+            c2 = fgetc(in);
+            if (level >= 5 && c2 == '<') {
+                /* shift-left operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                fprintf(out, "  push %%rax\n");
+                expression(args, in, out, 4);
+                fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
+                continue;
+            }
+            if (level >= 6 && c2 == '=') {
+                /* less-than-or-equal operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                cmp_expr(args, in, out, CMP_LE);
+                continue;
+            }
+            ungetc(c2, in);
+            if (level >= 6) {
+                /* less-than operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                cmp_expr(args, in, out, CMP_LT);
+                continue;
+            }
+        }
+        if (c == '>') {
+            c2 = fgetc(in);
+            if (level >= 5 && c2 == '>') {
+                /* shift-right-operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                fprintf(out, "  push %%rax\n");
+                expression(args, in, out, 4);
+                fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
+                continue;
+            }
+            if (level >= 6 && c2 == '=') {
+                /* greater-than-or-equal operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                cmp_expr(args, in, out, CMP_GE);
+                continue;
+            }
+            ungetc(c2, in);
+            if (level >= 6) {
+                /* greater-than operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                cmp_expr(args, in, out, CMP_GT);
+                continue;
+            }
+        }
+        if (level >= 7 && c == '!') {
+            /* inequality operator */
+            if ((c2 = fgetc(in)) != '=') {
+                eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c2);
+                exit(1);
+            }
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_NE);
+            continue;
+        }
+        if (level >= 8 && c == '&') {
+            /* bitwise and operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 7);
+            fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
+            continue;
+        }
+        if (level >= 10 && c == '|') {
+            /* bitwise or operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, 9);
+            fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
+            continue;
+        }
+        if (c == '=') {
+            c2 = fgetc(in);
+            if (level >= 7 && c2 == '=') {
+                /* equality operator */
+                if (left_is_lvalue)
+                    fprintf(out, "  mov (%%rax), %%rax\n");
+                cmp_expr(args, in, out, CMP_EQ);
+                continue;
+            }
+            ungetc(c2, in);
+
+            if (level >= 14 && c == '=') {
+                /* assignment operator, right associative */
+                if (!left_is_lvalue) {
+                    eprintf(args->arg0, "left operand of assignment has to be an lvalue");
+                    exit(1);
+                }
+
+                fprintf(out, "  push %%rax\n  mov (%%rax), %%rax\n");
+                expression(args, in, out, 14);
+                fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
+                continue;
+            }
+        }
+
+        // No more operations at this level.
+        ungetc(c, in);
+        if (left_is_lvalue) {
+            /* fetch rvalue */
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        }
         return;
     }
-    ungetc(c, in);
 }
 
 //
@@ -1032,7 +1025,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
 static void statement(struct compiler_args *args, FILE *in, FILE *out,
                       char* fn_ident, intptr_t switch_id, struct list *cases)
 {
-    char c;
+    int c;
     static char buffer[BUFSIZ];
     size_t id;
     static size_t stmt_id = 0; /* unique id for each statement for generating labels */
@@ -1329,7 +1322,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
 //
 static void arguments(struct compiler_args *args, FILE *in, FILE *out)
 {
-    char c;
+    int c;
     int i = 0;
     static char buffer[BUFSIZ];
 
@@ -1362,7 +1355,7 @@ static void arguments(struct compiler_args *args, FILE *in, FILE *out)
 static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_id)
 {
     size_t i;
-    char c;
+    int c;
 
     // Clear the list of locals.
     for (i = 0; i < args->locals.size; i++)
@@ -1440,7 +1433,7 @@ static void strings(struct compiler_args *args, FILE *out)
 static void declarations(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
-    char c;
+    int c;
     size_t i;
 
     while (identifier(args, in, buffer)) {
