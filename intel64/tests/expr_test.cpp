@@ -396,8 +396,8 @@ TEST_F(bcause, priority_mul_ge_eq)
 TEST_F(bcause, priority_mul_and_add)
 {
     auto output = compile_and_run(R"(
-            printf("4 ** 2 & 3 + 1 -> %d*n", 4 * 2 & 3 + 1);
         main() {
+            printf("4 ** 2 & 3 + 1 -> %d*n", 4 * 2 & 3 + 1);
         }
     )");
     EXPECT_EQ(output, "4 * 2 & 3 + 1 -> 0\n");
