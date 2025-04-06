@@ -862,11 +862,11 @@ static intptr_t find_identifier(struct compiler_args *args, const char *buffer, 
 }
 
 //
-// Parse a primary expression.
+// Parse a term.
 // It may have only unary operations (no binary ops).
 // Return true when it's an lvalue (address of the value).
 //
-static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
+static bool term(struct compiler_args *args, FILE *in, FILE *out)
 {
     static char buffer[BUFSIZ];
     char c;
@@ -894,7 +894,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '!': /* not operator */
-        if (primary_expression(args, in, out)) {
+        if (term(args, in, out)) {
             /* fetch rvalue */
             fprintf(out, "  mov (%%rax), %%rax\n");
         }
@@ -903,7 +903,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
 
     case '-':
         if ((c = fgetc(in)) == '-') { /* prefix decrement operator */
-            if (!primary_expression(args, in, out)) {
+            if (!term(args, in, out)) {
                 eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("--") "\n");
                 exit(1);
             }
@@ -912,7 +912,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         }
         else { /* negation operator */
             ungetc(c, in);
-            if (primary_expression(args, in, out)) {
+            if (term(args, in, out)) {
                 /* fetch rvalue */
                 fprintf(out, "  mov (%%rax), %%rax\n");
             }
@@ -925,7 +925,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT("+") "\n", c);
             exit(1);
         }
-        if (!primary_expression(args, in, out)) {
+        if (!term(args, in, out)) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("++") "\n");
             exit(1);
         }
@@ -934,7 +934,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '*': /* indirection operator */
-        if (primary_expression(args, in, out)) {
+        if (term(args, in, out)) {
             /* fetch rvalue */
             fprintf(out, "  mov (%%rax), %%rax\n");
         }
@@ -942,7 +942,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '&': /* address operator */
-        if (!operator(args, in, out, primary_expression(args, in, out), 1)) {
+        if (!term(args, in, out)) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("&") "\n");
             exit(1);
         }
@@ -986,6 +986,8 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
                 fprintf(out, "  lea %s(%%rip), %%rax\n", buffer);
             else
                 fprintf(out, "  lea -%lu(%%rbp), %%rax\n", (value + 2) * args->word_size);
+
+            //TODO: ( [ ++ --
         }
         else {
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect expression\n", c);
@@ -1001,7 +1003,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
 //
 static void rvalue(struct compiler_args *args, FILE *in, FILE *out, int level)
 {
-    bool is_lvalue = operator(args, in, out, primary_expression(args, in, out), level);
+    bool is_lvalue = operator(args, in, out, term(args, in, out), level);
     if (is_lvalue) {
         /* fetch rvalue */
         fprintf(out, "  mov (%%rax), %%rax\n");
