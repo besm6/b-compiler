@@ -2,3 +2,83 @@ This directory holds other source code for PDP-7 Unix, e.g. rewritten versions
 of utilities that did not come from the original scans.
 
 From: https://github.com/DoctorWkt/pdp7-unix/blob/master/src/other/
+
+Prorities of binary operations:
+
+    Operation    Priority
+    ------------------------
+        =           14
+        | ^         10
+        &           8
+        == !=       7
+        <= < >= >   6
+        << >>       5
+        + -         4
+        * / %       3
+
+
+Full Operator Precedence Table in C:
+
+Precedence  Operator        Description             Associativity
+-------------------------------------------------------------------------
+1 (Highest) ()              Parentheses (grouping)          Left-to-Right
+            []              Array subscripting              Left-to-Right
+            .               Structure/union member access   Left-to-Right
+            ->              Structure/union pointer access  Left-to-Right
+            ++ (postfix)    Postfix increment               Left-to-Right
+            -- (postfix)    Postfix decrement               Left-to-Right
+-------------------------------------------------------------------------
+2           ++ (prefix)     Prefix increment                Right-to-Left
+            -- (prefix)     Prefix decrement                Right-to-Left
+            + (unary)       Unary plus                      Right-to-Left
+            - (unary)       Unary minus                     Right-to-Left
+            !               Logical NOT                     Right-to-Left
+            ~               Bitwise NOT                     Right-to-Left
+            * (unary)       Dereference (indirection)       Right-to-Left
+            & (unary)       Address-of                      Right-to-Left
+            sizeof          Size of type or object          Right-to-Left
+            (type)          Type cast                       Right-to-Left
+-------------------------------------------------------------------------
+3           *               Multiplication                  Left-to-Right
+            /               Division                        Left-to-Right
+            %               Modulus (Remainder)             Left-to-Right
+-------------------------------------------------------------------------
+4           +               Addition                        Left-to-Right
+            -               Subtraction                     Left-to-Right
+-------------------------------------------------------------------------
+5           <<              Left Shift                      Left-to-Right
+            >>              Right Shift                     Left-to-Right
+-------------------------------------------------------------------------
+6           <               Less Than                       Left-to-Right
+            <=              Less Than or Equal              Left-to-Right
+            >               Greater Than                    Left-to-Right
+            >=              Greater Than or Equal           Left-to-Right
+-------------------------------------------------------------------------
+7           ==              Equal To                        Left-to-Right
+            !=              Not Equal To                    Left-to-Right
+-------------------------------------------------------------------------
+8           &               Bitwise AND                     Left-to-Right
+-------------------------------------------------------------------------
+9           ^               Bitwise XOR                     Left-to-Right
+-------------------------------------------------------------------------
+10          |               Bitwise OR                      Left-to-Right
+-------------------------------------------------------------------------
+11          &&              Logical AND                     Left-to-Right
+-------------------------------------------------------------------------
+12          ||              Logical ORD                     Left-to-Right
+-------------------------------------------------------------------------
+13          ?:              Ternary Conditional             Right-to-Left
+-------------------------------------------------------------------------
+14          =               Assignment                      Right-to-Left
+            +=              Addition Assignment             Right-to-Left
+            -=              Subtraction Assignment          Right-to-Left
+            *=              Multiplication Assignment       Right-to-Left
+            /=              Division Assignment             Right-to-Left
+            %=              Modulus Assignment              Right-to-Left
+            <<=             Left Shift Assignment           Right-to-Left
+            >>=             Right Shift Assignment          Right-to-Left
+            &=              Bitwise AND Assignment          Right-to-Left
+            ^=              Bitwise XOR Assignment          Right-to-Left
+            |=              Bitwise OR Assignment           Right-to-Left
+-------------------------------------------------------------------------
+15 (Lowest) ,               Comma (expression separator)    Left-to-Right

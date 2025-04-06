@@ -291,3 +291,201 @@ TEST_F(bcause, binary_operators)
 )";
     EXPECT_EQ(output, expect);
 }
+
+TEST_F(bcause, priority_add_mul)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("3 + 4 ** 2 -> %d*n", 3 + 4 * 2);
+        }
+    )");
+    EXPECT_EQ(output,  "3 + 4 * 2 -> 11\n");
+}
+
+TEST_F(bcause, priority_mul_add_mul)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("5 ** 2 + 3 ** 4 -> %d*n", 5 * 2 + 3 * 4);
+        }
+    )");
+    EXPECT_EQ(output, "5 * 2 + 3 * 4 -> 22\n");
+}
+
+TEST_F(bcause, priority_sub_div)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("10 - 6 / 2 -> %d*n", 10 - 6 / 2);
+        }
+    )");
+    EXPECT_EQ(output, "10 - 6 / 2 -> 7\n");
+}
+
+TEST_F(bcause, priority_mod_add)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("7 %% 3 + 2 -> %d*n", 7 % 3 + 2);
+        }
+    )");
+    EXPECT_EQ(output, "7 % 3 + 2 -> 3\n");
+}
+
+TEST_F(bcause, priority_add_lt)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("5 + 3 < 9 -> %d*n", 5 + 3 < 9);
+        }
+    )");
+    EXPECT_EQ(output, "5 + 3 < 9 -> 1\n");
+}
+
+TEST_F(bcause, priority_lt_eq)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("4 < 6 == 1 -> %d*n", 4 < 6 == 1);
+        }
+    )");
+    EXPECT_EQ(output, "4 < 6 == 1 -> 1\n");
+}
+
+TEST_F(bcause, priority_eq_and)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("3 == 3 & 1 -> %d*n", 3 == 3 & 1);
+        }
+    )");
+    EXPECT_EQ(output, "3 == 3 & 1 -> 1\n");
+}
+
+TEST_F(bcause, priority_and_or)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("2 & 3 | 4 -> %d*n", 2 & 3 | 4);
+        }
+    )");
+    EXPECT_EQ(output, "2 & 3 | 4 -> 6\n");
+}
+
+TEST_F(bcause, priority_mul_add_lt)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("2 ** 3 + 4 < 11 -> %d*n", 2 * 3 + 4 < 11);
+        }
+    )");
+    EXPECT_EQ(output, "2 * 3 + 4 < 11 -> 1\n");
+}
+
+TEST_F(bcause, priority_mul_ge_eq)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("5 ** 2 >= 10 == 1 -> %d*n", 5 * 2 >= 10 == 1);
+        }
+    )");
+    EXPECT_EQ(output, "5 * 2 >= 10 == 1 -> 1\n");
+}
+
+TEST_F(bcause, priority_mul_and_add)
+{
+    auto output = compile_and_run(R"(
+            printf("4 ** 2 & 3 + 1 -> %d*n", 4 * 2 & 3 + 1);
+        main() {
+        }
+    )");
+    EXPECT_EQ(output, "4 * 2 & 3 + 1 -> 0\n");
+}
+
+TEST_F(bcause, priority_div_add_gt_or)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("6 / 2 + 1 > 3 | 2 -> %d*n", 6 / 2 + 1 > 3 | 2);
+        }
+    )");
+    EXPECT_EQ(output, "6 / 2 + 1 > 3 | 2 -> 3\n");
+}
+
+TEST_F(bcause, priority_div_mod)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("10 / 2 %% 3 -> %d*n", 10 / 2 % 3);
+        }
+    )");
+    EXPECT_EQ(output, "10 / 2 % 3 -> 2\n");
+}
+
+TEST_F(bcause, priority_mul_or)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printf("0 ** 5 | 3 -> %d*n", 0 * 5 | 3);
+        }
+    )");
+    EXPECT_EQ(output, "0 * 5 | 3 -> 3\n");
+}
+
+            /*
+            printf("12345 + 6789 ** 10 -> %d*n", 12345 + 6789 * 10);
+            printf("100000 - 25000 / 5 -> %d*n", 100000 - 25000 / 5);
+            printf("98765 %% 1234 + 5678 -> %d*n", 98765 % 1234 + 5678);
+            printf("5000 ** 20 + 3000 < 105000 -> %d*n", 5000 * 20 + 3000 < 105000);
+            printf("10000 / 25 ** 4 == 1600 -> %d*n", 10000 / 25 * 4 == 1600);
+            printf("123456 & 7890 -> %d*n", 123456 & 7890);
+            printf("25000 ** 4 | 98765 -> %d*n", 25000 * 4 | 98765);
+            printf("987654 / 321 + 456 > 3000 | 12345 -> %d*n", 987654 / 321 + 456 > 3000 | 12345);
+            printf("(12345 + 67890) ** 2 -> %d*n", (12345 + 67890) * 2);
+            printf("50000 - 20000 <= 30000 & 127 -> %d*n", 50000 - 20000 <= 30000 & 127);
+            printf("9876543 / 123 %% 100 -> %d*n", 9876543 / 123 % 100);
+            printf("45678 | 12345 < 60000 -> %d*n", 45678 | 12345 < 60000);
+            printf("1000000 / 500 + 1500 != 3499 -> %d*n", 1000000 / 500 + 1500 != 3499);
+            printf("123456 ** 2 / 3 + 789 > 82300 -> %d*n", 123456 * 2 / 3 + 789 > 82300);
+            printf("987654 & 123456 | 1000000 -> %d*n", 987654 & 123456 | 1000000);
+            */
+    /*
+    EXPECT_EQ(output[15], "12345 + 6789 * 10 -> 80235");
+    EXPECT_EQ(output[16], "100000 - 25000 / 5 -> 95000");
+    EXPECT_EQ(output[17], "98765 % 1234 + 5678 -> 6365");
+    EXPECT_EQ(output[18], "5000 * 20 + 3000 < 105000 -> 1");
+    EXPECT_EQ(output[19], "10000 / 25 * 4 == 1600 -> 1");
+    EXPECT_EQ(output[20], "123456 & 7890 -> 6144");
+    EXPECT_EQ(output[21], "25000 * 4 | 98765 -> 99837");
+    EXPECT_EQ(output[22], "987654 / 321 + 456 > 3000 | 12345 -> 1");
+    EXPECT_EQ(output[23], "(12345 + 67890) * 2 -> 160470");
+    EXPECT_EQ(output[24], "50000 - 20000 <= 30000 & 127 -> 1");
+    EXPECT_EQ(output[25], "9876543 / 123 % 100 -> 29");
+    EXPECT_EQ(output[26], "45678 | 12345 < 60000 -> 1");
+    EXPECT_EQ(output[27], "1000000 / 500 + 1500 != 3499 -> 1");
+    EXPECT_EQ(output[28], "123456 * 2 / 3 + 789 > 82300 -> 1");
+    EXPECT_EQ(output[29], "987654 & 123456 | 1000000 -> 1015806");
+    */
+
+// TODO: Examples Including << and >>
+//  2 + 3 << 1 → + (precedence 2) before << (precedence 3) →  (2 + 3) << 1 ->  5 << 1 -> 10
+// 16 >> 2 * 4 → * (precedence 1) before >> (precedence 3) → 16 >> (2 * 4) -> 16 >> 8 -> 0
+// 8 << 2 < 33 → << (precedence 3) before < (precedence 4) → (8 << 2) < 33 -> 32 < 33 -> 1
+//  4 & 3 << 1 → << (precedence 3) before & (precedence 6) →  (3 << 1) & 4 ->  6 & 4  -> 4
+
+// TODO:
+// evaluate("3 + 2 << 1", 7);
+// evaluate("4 * 3 << 2", 48);
+// evaluate("1 << 2 < 5", 1);
+// evaluate("16 - 8 >> 1", 12);
+// evaluate("3 << 2 & 7", 4);
+// evaluate("2 | 4 >> 1", 2);
+// evaluate("8 >> 2 == 2", 1);
+// evaluate("5 * 2 << 1 + 3", 23);
+// evaluate("15 % 4 << 2", 12);
+// evaluate("1 << 3 > 5 & 2", 1);
+// evaluate("12345 + 10 << 4", 12505);
+// evaluate("16 / 2 >> 1", 4);
+// evaluate("7 & 3 << 2 | 8", 12);
+// evaluate("1 << 4 != 15", 1);
+// evaluate("98765 >> 3 >= 12345", 1);

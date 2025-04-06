@@ -239,7 +239,7 @@ mapch(c) {
   }
 
   if (a == '**') {
-    a=read();
+    a = read();
 
     if (a == '0')
       return(0);
@@ -448,7 +448,7 @@ declare(kw) {
   extrn csym, cval, nauto;
   auto o;
 
-  while ((o=symbol()) == 20) { /* name */
+  while ((o = symbol()) == 20) { /* name */
     if (kw == 6) { /* extrn */
       *csym = 6;
       o = symbol();
@@ -488,7 +488,7 @@ extdef() {
   write('.');
   name(&csym[2]);
   write(':');
-  o=symbol();
+  o = symbol();
 
   if (o == 2 | o == 6) { /* $( ( */
     write('.+');
@@ -496,10 +496,10 @@ extdef() {
     nauto = 2;
     if (o == 6) { /* ( */
       declare(8); /* param */
-      if ((o=symbol()) != 2) /* $( */
+      if ((o = symbol()) != 2) /* $( */
         goto syntax;
     }
-    while ((o=symbol()) == 19 & cval<10) /* auto extrn */
+    while ((o = symbol()) == 19 & cval<10) /* auto extrn */
       declare(cval);
     peeksym = o;
     gen('s',nauto); /* setop */
@@ -537,7 +537,7 @@ extdef() {
       goto syntax;
     write('.+');
     write('1*n');
-    if ((o=symbol()) == 1) /* ; */
+    if ((o = symbol()) == 1) /* ; */
       goto done;
     while (o == 21 | o == 41) { /* number - */
       if (o == 41) { /* - */

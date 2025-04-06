@@ -76,8 +76,8 @@ static void free_stack_var(struct stack_var* ptr)
     free(ptr);
 }
 
-static void expression(struct compiler_args *args, FILE *in, FILE *out);
-static void rvalue(struct compiler_args *args, FILE *in, FILE *out);
+static void expression(struct compiler_args *args, FILE *in, FILE *out, int level);
+static void rvalue(struct compiler_args *args, FILE *in, FILE *out, int level);
 static void declarations(struct compiler_args *args, FILE *in, FILE *buffer);
 static int subprocess(const char *arg0, const char *p_name, char *const *p_arg);
 
@@ -561,7 +561,7 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
 static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op)
 {
     fprintf(out, "  push %%rax\n");
-    expression(args, in, out);
+    expression(args, in, out, op >= CMP_EQ ? 6 : 5);
     fprintf(out,
         "  pop %%rdi\n"
         "  cmp %%rax, %%rdi\n"
@@ -572,207 +572,128 @@ static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_o
 }
 
 //
-// Parse binary operation.
-//
-static bool bin_op(struct compiler_args *args, FILE *in, FILE *out, char c)
-{
-    switch (c) {
-    case '+': /* addition operator */
-    case '*': /* multiplication operator */
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out);
-        fprintf(out, "  pop %%rdi\n  %s %%rdi, %%rax\n", c == '+' ? "add" : "imul");
-        break;
-
-    case '-': /* subtraction operator */
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
-        break;
-
-    case '/': /* division operator */
-    case '%': /* modulo operator */
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-        if (c == '%')
-            fprintf(out, "  mov %%rdx, %%rax\n");
-        break;
-
-    case '<':
-        switch (c = fgetc(in)) {
-        case '<': /* shift-left operator */
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
-            break;
-        case '=': /* less-than-or-equal operator */
-            cmp_expr(args, in, out, CMP_LE);
-            break;
-        default: /* less-than operator */
-            ungetc(c, in);
-            cmp_expr(args, in, out, CMP_LT);
-        }
-        break;
-
-    case '>':
-        switch (c = fgetc(in)) {
-        case '>': /* shift-right-operator */
-            fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
-            break;
-        case '=': /* greater-than-or-equal operator */
-            cmp_expr(args, in, out, CMP_GE);
-            break;
-        default: /* greater-than operator */
-            ungetc(c, in);
-            cmp_expr(args, in, out, CMP_GT);
-        }
-        break;
-
-    case '!': /* inequality operator */
-        if ((c = fgetc(in)) != '=') {
-            eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c);
-            exit(1);
-        }
-        cmp_expr(args, in, out, CMP_NE);
-        break;
-
-    case '=': /* equality operator */
-        if ((c = fgetc(in)) != '=') {
-            eprintf(args->arg0, "unknown operator " QUOTE_FMT("=%c") "\n", c);
-            exit(1);
-        }
-        cmp_expr(args, in, out, CMP_EQ);
-        break;
-
-    case '&': /* bitwise and operator */
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out);
-        fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
-        break;
-
-    case '|': /* bitwise or operator */
-        fprintf(out, "  push %%rax\n");
-        rvalue(args, in, out);
-        fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
-        break;
-    default:
-        ungetc(c, in);
-        return false;
-    }
-
-    return true;
-}
-
-//
-// Parse a postfix operator:
+// Parse a postfix operator or a binary operator:
 //      ++      increment
 //      --      decrement
 //      =       assignment
 //      []      array indexing
 //      ()      function call
 //
-static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_is_lvalue)
+static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_is_lvalue, int level)
 {
-    char c, c1, c2;
+    char c;
     bool is_lvalue = false;
     int num_args = 0;
 
     whitespace(args, in);
+    c = fgetc(in);
+    if (c == '+') {
+        if ((c = fgetc(in)) == '+') {
+            /* postfix increment operator */
+            if (!left_is_lvalue) {
+                eprintf(args->arg0, "left operand of " QUOTE_FMT("++") " has to be an lvalue");
+                exit(1);
+            }
 
-    switch (c = fgetc(in)) {
-    case '+': /* postfix increment operator */
-        if ((c = fgetc(in)) != '+') {
-            ungetc(c, in);
+            fprintf(out,
+                "  mov (%%rax), %%rcx\n"
+                "  addq $1, (%%rax)\n"
+                "  mov %%rcx, %%rax\n"
+            );
+            is_lvalue = operator(args, in, out, false, level);
+            return is_lvalue;
+        }
+        ungetc(c, in);
+
+        if (level >= 4) {
+            /* addition operator */
             if (left_is_lvalue)
                 fprintf(out, "  mov (%%rax), %%rax\n");
             fprintf(out, "  push %%rax\n");
-            rvalue(args, in, out);
+            rvalue(args, in, out, 3);
             fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
-            break;
+            return false;
         }
+        ungetc('+', in);
+        return false;
+    }
+    if (c == '-') {
+        c = fgetc(in);
+        if (c == '-') {
+            /* postfix decrement operator */
+            if (!left_is_lvalue) {
+                eprintf(args->arg0, "left operand of " QUOTE_FMT("--") " has to be an lvalue");
+                exit(1);
+            }
 
-        if (!left_is_lvalue) {
-            eprintf(args->arg0, "left operand of " QUOTE_FMT("++") " has to be an lvalue");
-            exit(1);
+            fprintf(out,
+                "  mov (%%rax), %%rcx\n"
+                "  subq $1, (%%rax)\n"
+                "  mov %%rcx, %%rax\n"
+            );
+            is_lvalue = operator(args, in, out, false, level);
+            return is_lvalue;
         }
+        ungetc(c, in);
 
-        fprintf(out,
-            "  mov (%%rax), %%rcx\n"
-            "  addq $1, (%%rax)\n"
-            "  mov %%rcx, %%rax\n"
-        );
-        is_lvalue = operator(args, in, out, false);
-        break;
-
-    case '-': /* postfix decrement operator */
-        if ((c = fgetc(in)) != '-') {
-            ungetc(c, in);
+        if (level >= 4) {
+            /* subtraction operator */
             if (left_is_lvalue)
                 fprintf(out, "  mov (%%rax), %%rax\n");
-            bin_op(args, in, out, '-');
-            break;
+            fprintf(out, "  push %%rax\n");
+            rvalue(args, in, out, 3);
+            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
+            return false;
         }
-
-        if (!left_is_lvalue) {
-            eprintf(args->arg0, "left operand of " QUOTE_FMT("--") " has to be an lvalue");
-            exit(1);
+        ungetc('-', in);
+        return false;
+    }
+    if (c == '=') {
+        c = fgetc(in);
+        if (level >= 7 && c == '=') {
+            /* equality operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_EQ);
+            return false;
         }
+        ungetc(c, in);
 
-        fprintf(out,
-            "  mov (%%rax), %%rcx\n"
-            "  subq $1, (%%rax)\n"
-            "  mov %%rcx, %%rax\n"
-        );
-        is_lvalue = operator(args, in, out, false);
-        break;
-
-    case '=': /* assignment operator */
-        c1 = fgetc(in);
-        c2 = fgetc(in);
-        ungetc(c2, in);
-        ungetc(c1, in);
-
-        if (c1 == '=' && c2 != '=') /* check for equality operator `==` */
-            goto bin_op;
-
+        /* assignment operator */
         if (!left_is_lvalue) {
             eprintf(args->arg0, "left operand of assignment has to be an lvalue");
             exit(1);
         }
 
         fprintf(out, "  push %%rax\n  mov (%%rax), %%rax\n");
-
-        if (!bin_op(args, in, out, fgetc(in)))
-            rvalue(args, in, out);
-
+        rvalue(args, in, out, 13);
         fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
         return false;
-
-    case '[': /* index operator */
+    }
+    if (c == '[') {
+        /* index operator */
         if (left_is_lvalue) {
             fprintf(out, "  push (%%rax)\n");
         } else {
             fprintf(out, "  push %%rax\n");
         }
-        expression(args, in, out);
+        expression(args, in, out, 15);
         fprintf(out, "  pop %%rdi\n  shl $3, %%rax\n  add %%rdi, %%rax\n");
 
         if ((c = fgetc(in)) != ']') {
             eprintf(args->arg0, "unexpected token " QUOTE_FMT("%c") ", expect closing " QUOTE_FMT("]") " after index expression\n", c);
             exit(1);
         }
-        is_lvalue = operator(args, in, out, true);
-        break;
-
-    case '(': /* function call */
+        is_lvalue = operator(args, in, out, true, level);
+        return is_lvalue;
+    }
+    if (c == '(') {
+        /* function call */
         fprintf(out, "  push %%rax\n");
 
         while ((c = fgetc(in)) != ')') {
             ungetc(c, in);
-            expression(args, in, out);
+            expression(args, in, out, 15);
 
             if (++num_args > MAX_FN_CALL_ARGS) {
                 eprintf(args->arg0, "only %d call arguments are currently supported\n", MAX_FN_CALL_ARGS);
@@ -794,31 +715,122 @@ static bool operator(struct compiler_args *args, FILE *in, FILE *out, bool left_
             fprintf(out, "  pop %s\n", arg_registers[--num_args]);
 
         fprintf(out, "  pop %%r10\n  call *%%r10\n");
-        is_lvalue = operator(args, in, out, false);
-        break;
-
-    case '*':
-    case '/':
-    case '%':
-    case '<':
-    case '>':
-    case '!':
-    case '&':
-    case '|':
-bin_op:
+        is_lvalue = operator(args, in, out, false, level);
+        return is_lvalue;
+    }
+    if (level >= 3 && c == '*') {
+        /* multiplication operator */
         if (left_is_lvalue)
             fprintf(out, "  mov (%%rax), %%rax\n");
-
-        bin_op(args, in, out, c);
-        break;
-
-    default:
-        ungetc(c, in);
-        is_lvalue = left_is_lvalue;
-        break;
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 2);
+        fprintf(out, "  pop %%rdi\n  imul %%rdi, %%rax\n");
+        return false;
     }
-
-    return is_lvalue;
+    if (level >= 3 && c == '/') {
+        /* division operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 2);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+        return false;
+    }
+    if (level >= 3 && c == '%') {
+        /* modulo operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 2);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+        fprintf(out, "  mov %%rdx, %%rax\n");
+        return false;
+    }
+    if (c == '<') {
+        int c2 = fgetc(in);
+        if (level >= 5 && c2 == '<') {
+            /* shift-left operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            rvalue(args, in, out, 4);
+            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
+            return false;
+        }
+        if (level >= 6 && c2 == '=') {
+            /* less-than-or-equal operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_LE);
+            return false;
+        }
+        ungetc(c2, in);
+        if (level >= 6) {
+            /* less-than operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_LT);
+            return false;
+        }
+    }
+    if (c == '>') {
+        int c2 = fgetc(in);
+        if (level >= 5 && c2 == '>') {
+            /* shift-right-operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            fprintf(out, "  push %%rax\n");
+            rvalue(args, in, out, 4);
+            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
+            return false;
+        }
+        if (level >= 6 && c2 == '=') {
+            /* greater-than-or-equal operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_GE);
+            return false;
+        }
+        ungetc(c2, in);
+        if (level >= 6) {
+            /* greater-than operator */
+            if (left_is_lvalue)
+                fprintf(out, "  mov (%%rax), %%rax\n");
+            cmp_expr(args, in, out, CMP_GT);
+            return false;
+        }
+    }
+    if (level >= 7 && c == '!') {
+        /* inequality operator */
+        if ((c = fgetc(in)) != '=') {
+            eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c);
+            exit(1);
+        }
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        cmp_expr(args, in, out, CMP_NE);
+        return false;
+    }
+    if (level >= 8 && c == '&') {
+        /* bitwise and operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 7);
+        fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
+        return false;
+    }
+    if (level >= 10 && c == '|') {
+        /* bitwise or operator */
+        if (left_is_lvalue)
+            fprintf(out, "  mov (%%rax), %%rax\n");
+        fprintf(out, "  push %%rax\n");
+        rvalue(args, in, out, 9);
+        fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
+        return false;
+    }
+    ungetc(c, in);
+    return left_is_lvalue;
 }
 
 //
@@ -877,7 +889,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '(': /* parentheses */
-        expression(args, in, out);
+        expression(args, in, out, 15);
         ASSERT_CHAR(args, in, ')', "expect " QUOTE_FMT(")") " after " QUOTE_FMT("(<expr>") ", got " QUOTE_FMT("%c") "\n", c);
         break;
 
@@ -930,7 +942,7 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
         break;
 
     case '&': /* address operator */
-        if (!operator(args, in, out, primary_expression(args, in, out))) {
+        if (!operator(args, in, out, primary_expression(args, in, out), 1)) {
             eprintf(args->arg0, "expected lvalue after " QUOTE_FMT("&") "\n");
             exit(1);
         }
@@ -987,9 +999,9 @@ static bool primary_expression(struct compiler_args *args, FILE *in, FILE *out)
 //
 // Parse rvalue.
 //
-static void rvalue(struct compiler_args *args, FILE *in, FILE *out)
+static void rvalue(struct compiler_args *args, FILE *in, FILE *out, int level)
 {
-    bool is_lvalue = operator(args, in, out, primary_expression(args, in, out));
+    bool is_lvalue = operator(args, in, out, primary_expression(args, in, out), level);
     if (is_lvalue) {
         /* fetch rvalue */
         fprintf(out, "  mov (%%rax), %%rax\n");
@@ -1000,32 +1012,32 @@ static void rvalue(struct compiler_args *args, FILE *in, FILE *out)
 // Parse expression.
 // Return true when it's an lvalue (address of the value).
 //
-static void expression(struct compiler_args *args, FILE *in, FILE *out)
+static void expression(struct compiler_args *args, FILE *in, FILE *out, int level)
 {
     char c;
     static size_t conditional = 0;
     size_t this_conditional;
 
-    rvalue(args, in, out);
+    rvalue(args, in, out, level - 1);
     whitespace(args, in);
-    switch (c = fgetc(in)) {
-    case '?': /* ternary operators have the lowest precedence, so they need to be resolved here */
+
+    c = fgetc(in);
+    if (level >= 13 && c == '?') {
+        /* ternary operators have the lowest precedence, so they need to be resolved here */
         this_conditional = conditional++;
         fprintf(out, "  cmp $0, %%rax\n  je .L.cond.else.%ld\n", this_conditional);
-        expression(args, in, out);
+        expression(args, in, out, 12);
         whitespace(args, in);
         if ((c = fgetc(in)) != ':') {
             eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(":") " between conditional branches\n", c);
             exit(1);
         }
         fprintf(out, "  jmp .L.cond.end.%ld\n.L.cond.else.%ld:\n", this_conditional, this_conditional);
-        expression(args, in, out);
+        expression(args, in, out, 13);
         fprintf(out, ".L.cond.end.%ld:\n", this_conditional);
-        break;
-    default:
-        ungetc(c, in);
-        break;
+        return;
     }
+    ungetc(c, in);
 }
 
 //
@@ -1086,7 +1098,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                         eprintf(args->arg0, "expect " QUOTE_FMT("(") " or " QUOTE_FMT(";") " after " QUOTE_FMT("return") "\n");
                         exit(1);
                     }
-                    expression(args, in, out);
+                    expression(args, in, out, 15);
                     whitespace(args, in);
                     ASSERT_CHAR(args, in, ')', "expect " QUOTE_FMT(")") " after " QUOTE_FMT("return") " statement\n");
                     whitespace(args, in);
@@ -1101,7 +1113,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                 id = stmt_id++;
 
                 ASSERT_CHAR(args, in, '(', "expect " QUOTE_FMT("(") " after " QUOTE_FMT("if") "\n");
-                expression(args, in, out);
+                expression(args, in, out, 15);
                 fprintf(out, "  cmp $0, %%rax\n  je .L.else.%lu\n", id);
                 whitespace(args, in);
                 ASSERT_CHAR(args, in, ')', "expect " QUOTE_FMT(")") " after condition\n");
@@ -1133,7 +1145,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
 
                 ASSERT_CHAR(args, in, '(', "expect " QUOTE_FMT("(") " after " QUOTE_FMT("while") "\n");
                 fprintf(out, ".L.start.%lu:\n", id);
-                expression(args, in, out);
+                expression(args, in, out, 15);
                 fprintf(out,
                     "  cmp $0, %%rax\n"
                     "  je .L.end.%lu\n",
@@ -1149,7 +1161,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
             else if (strcmp(buffer, "switch") == 0) { /* switch statement */
                 id = stmt_id++;
 
-                expression(args, in, out);
+                expression(args, in, out, 15);
                 fprintf(out, "  jmp .L.cmp.%ld\n.L.stmts.%ld:\n", id, id);
 
                 memset(&switch_case_list, 0, sizeof(struct list));
@@ -1301,7 +1313,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
                     for (i = strlen(buffer) - 1; i >= 0; i--)
                         ungetc(buffer[i], in);
 
-                    expression(args, in, out);
+                    expression(args, in, out, 15);
                     whitespace(args, in);
                     if ((c = fgetc(in)) != ';') {
                         eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") ", expect " QUOTE_FMT(";") " after expression statement\n", c);
@@ -1316,7 +1328,7 @@ static void statement(struct compiler_args *args, FILE *in, FILE *out,
         }
         else {
             ungetc(c, in);
-            expression(args, in, out);
+            expression(args, in, out, 15);
             whitespace(args, in);
             if ((c = fgetc(in)) != ';') {
                 eprintf(args->arg0, "unexpected character " QUOTE_FMT("%c") " expect " QUOTE_FMT(";") " after expression statement\n", c);
