@@ -19,3 +19,4 @@ tmp
 *.nm
 *.trace
 *.b-
+*.madlen

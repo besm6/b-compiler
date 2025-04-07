@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   }
 
   while (!eof) {
-    ns = symtab + 51;
+    ns = &symtab[51];
     extdef();
     blkend();
   }
@@ -129,32 +129,32 @@ int *lookup() {
 
   rp = symtab;
   while (rp < ns) {
-    np = rp + 2;
+    np = &rp[2];
     sp = symbuf;
     while (*np == *sp) {
       if (!*np)
         return (rp);
-      np = np+1;
-      sp = sp+1;
+      np = &np[1];
+      sp = &sp[1];
     }
     while (*np)
-      np = np+1;
-    rp = np+1;
+      np = &np[1];
+    rp = &np[1];
   }
   sp = symbuf;
-  if (ns >= symtab + 290) {
+  if (ns >= &symtab[290]) {
     error('sf');
     eof = 1;
     return (rp);
   }
   *ns = 0;
   ns[1] = 0;
-  ns = ns+2;
+  ns = &ns[2];
   while ((*ns = *sp)) {
-    ns = ns+1;
-    sp = sp+1;
+    ns = &ns[1];
+    sp = &sp[1];
   }
-  ns = ns+1;
+  ns = &ns[1];
   return (rp);
 }
 
@@ -249,9 +249,9 @@ com1:
   if (ct == 123) { /* letter */
     sp = symbuf;
     while ((ct == 123) | (ct == 124)) {
-      if (sp<symbuf+9) {
+      if (sp < &symbuf[9]) {
         *sp = c;
-        sp = sp+1;
+        sp = &sp[1];
       }
       ct = ctab[c = read()];
     }
@@ -290,36 +290,68 @@ void getcc() {
   cval = 0;
   if ((c = mapch('\'')) < 0)
     return;
-  cval = c;
+  cval = c;                     /* character #1 */
   if ((c = mapch('\'')) < 0)
     return;
-  cval = cval * 256 + c;
+  cval = (cval << 8) | c;       /* character #2 */
   if ((c = mapch('\'')) < 0)
     return;
-  cval = cval * 256 + c;
+  cval = (cval << 8) | c;       /* character #3 */
   if ((c = mapch('\'')) < 0)
     return;
-  cval = cval * 256 + c;
+  cval = (cval << 8) | c;       /* character #4 */
+  if ((c = mapch('\'')) < 0)
+    return;
+  cval = (cval << 8) | c;       /* character #5 */
+  if ((c = mapch('\'')) < 0)
+    return;
+  cval = (cval << 8) | c;       /* character #6 */
   if (mapch('\'') >= 0)
     error('cc');
 }
 
 int getstr() {
-  auto int i, c, d;
+  auto int i, c;
+  auto intptr_t word;
 
   i = 1;
 loop:
   if ((c = mapch('"')) < 0) {
-    number(1024);
+    number(0);
     write('\n');
     return (i);
   }
-  if ((d = mapch('"')) < 0) {
-    number(c*256+4);
+  word = c;                     /* character #1 */
+  if ((c = mapch('"')) < 0) {
+    number(word << 40);
     write('\n');
     return (i);
   }
-  number(c*256+d);
+  word = (word << 8) | c;       /* character #2 */
+  if ((c = mapch('"')) < 0) {
+    number(word << 32);
+    write('\n');
+    return (i);
+  }
+  word = (word << 8) | c;       /* character #3 */
+  if ((c = mapch('"')) < 0) {
+    number(word << 24);
+    write('\n');
+    return (i);
+  }
+  word = (word << 8) | c;       /* character #4 */
+  if ((c = mapch('"')) < 0) {
+    number(word << 16);
+    write('\n');
+    return (i);
+  }
+  word = (word << 8) | c;       /* character #5 */
+  if ((c = mapch('"')) < 0) {
+    number(word << 8);
+    write('\n');
+    return (i);
+  }
+  number((word << 8) | c);      /* character #6 */
   write('\n');
   i = i+1;
   goto loop;
@@ -718,7 +750,7 @@ void extdef() {
     }
     goto syntax;
 done:
-    if (c>0) {
+    if (c > 0) {
       write('   ,');
       write('bss,');
       number(c);
@@ -865,7 +897,7 @@ void blkend() {
     number(i);
     write('\n');
     i = i+1;
-  }*/
+  } */
   isn = 0;
 }
 
@@ -1062,7 +1094,7 @@ void number(int x) {
 void name(int *s) {
   while (*s) {
     write(*s);
-    s = s+1;
+    s = &s[1];
   }
 }
 
