@@ -266,7 +266,7 @@ void getcc() {
   cval = c;
   if ((c = mapch('\'')) < 0)
     return;
-  cval = cval * 512 + c;
+  cval = cval * 256 + c;
   if (mapch('\'') >= 0)
     error('cc');
 }
