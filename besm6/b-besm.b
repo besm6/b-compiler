@@ -334,7 +334,7 @@ case21:
     else if (*csym == 6) { /* extrn */
       write('   ,');
       write('xts,');
-      name(csym+2);
+      name(&csym[2]);
       write('*n');
     } else { /* internal */
       write(' 14,');
@@ -558,12 +558,12 @@ extdef() {
   csym[0] = 6; /* extrn */
   if (nentry == 0) {
     write(' ');
-    name(csym + 2);
+    name(&csym[2]);
     write(':,na');
     write('me,*n');
   } else {
     write('*n ');
-    name(csym + 2);
+    name(&csym[2]);
     write(':,en');
     write('try,');
     write('*n');
