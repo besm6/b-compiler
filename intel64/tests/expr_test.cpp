@@ -292,3 +292,39 @@ TEST_F(bcause, binary_operators)
 )";
     EXPECT_EQ(output, expect);
 }
+
+TEST_F(bcause, eq_by_bitmask)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            auto cval;
+
+            cval = 51;
+            if ((cval & 017777) == cval) {
+                printf("Small positive: %d*n", cval);
+            } else {
+                printf("Wrong: %d*n", cval);
+            }
+        }
+    )");
+    EXPECT_EQ(output, "Small positive: 51\n");
+}
+
+TEST_F(bcause, octal_literals)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            auto v;
+            v = 012345;
+            printf("%d*n", v);
+            v = -04567;
+            printf("%d*n", v);
+        }
+    )");
+    const std::string expect = R"(5349
+-2423
+)";
+    EXPECT_EQ(output, expect);
+}

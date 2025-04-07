@@ -295,26 +295,31 @@ static int identifier(struct compiler_args *args, FILE *in, char* buffer)
 
 //
 // Parse an integer literal, possibly empty.
+// Leading zero means octal value.
 //
 static intptr_t number(struct compiler_args *args, FILE *in)
 {
-    int read = 0;
-    int c;
     intptr_t num = 0;
+    int c, base;
 
     whitespace(args, in);
-    while ((c = fgetc(in)) != EOF) {
-        if (!isdigit(c)) {
-            ungetc(c, in);
-            return num;
-        }
-        read++;
-        num *= 10;
-        num += (c - '0');
-    }
-
-    if (read == 0)
+    c = fgetc(in);
+    if (c == EOF) {
         return EOF;
+    }
+    if (c == '0') {
+        base = 8;
+    } else {
+        base = 10;
+    }
+    while (isdigit(c)) {
+        num = (num * base) + c -'0';
+        c = fgetc(in);
+        if (c == EOF) {
+            return EOF;
+        }
+    }
+    ungetc(c, in);
     return num;
 }
 
