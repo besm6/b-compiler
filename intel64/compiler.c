@@ -830,7 +830,7 @@ static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_o
 //      =>>
 //      =>=
 //      =>
-//      =!
+//      =!=
 //      ===
 //      =&
 //      =|
@@ -1125,13 +1125,17 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
         if (c == '=') {
             c2 = fgetc(in);
             if (level >= 7 && c2 == '=') {
-                /* equality operator */
-                if (left_is_lvalue) {
-                    fprintf(out, "  mov (%%rax), %%rax\n");
-                    left_is_lvalue = false;
+                int c3 = fgetc(in);
+                ungetc(c3, in);
+                if (c3 != '=') {
+                    /* equality operator */
+                    if (left_is_lvalue) {
+                        fprintf(out, "  mov (%%rax), %%rax\n");
+                        left_is_lvalue = false;
+                    }
+                    cmp_expr(args, in, out, CMP_EQ, 6);
+                    continue;
                 }
-                cmp_expr(args, in, out, CMP_EQ, 6);
-                continue;
             }
             if (level >= 14) {
                 //
