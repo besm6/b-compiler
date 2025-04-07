@@ -3,7 +3,7 @@ CFLAGS  = -O -g -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
 
-all:    ${PROG} bc.s #b.s
+all:    ${PROG} bc.s b.s
 
 install:
 
