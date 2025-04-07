@@ -31,6 +31,8 @@ void extdef(void);
 int subseq(int c, int a, int b);
 int mapch(int c);
 void number(int x);
+void gen_prolog(int *s);
+void gen_epilog(void);
 void gen_const(int n);
 void gen_auto(int offset);
 void gen_param(int offset);
@@ -94,7 +96,7 @@ void xflush() {
 #define flush xflush
 
 int main(int argc, char **argv) {
-  extern int symtab[], eof, *ns, nerror, nentry;
+  extern int symtab[], eof, *ns, nerror;
   extern int fin, fout;
 
   if (argc > 1) {
@@ -114,11 +116,6 @@ int main(int argc, char **argv) {
     ns = &symtab[51];
     extdef();
     blkend();
-  }
-  if (nentry > 0) {
-    write('   ,');
-    write('end,');
-    write('\n');
   }
   return (nerror != 0);
 }
@@ -649,7 +646,7 @@ done:
 }
 
 void extdef() {
-  extern int peeksym, *csym, cval, nauto, nparam, nentry, retflag;
+  extern int peeksym, *csym, cval, nauto, nparam, retflag;
   auto int o, c;
 
   o = symbol();
@@ -660,19 +657,7 @@ void extdef() {
     goto syntax;
 
   csym[0] = 6; /* extrn */
-  if (nentry == 0) {
-    write(' ');
-    name(&csym[2]);
-    write(':,na');
-    write('me,\n');
-  } else {
-    write('\n ');
-    name(&csym[2]);
-    write(':,en');
-    write('try,');
-    write('\n');
-  }
-  nentry = nentry + 1;
+  gen_prolog(&csym[2]);
   o = symbol();
 
   if ((o == 2) | (o == 6)) { /* { ( */
@@ -692,6 +677,7 @@ void extdef() {
     stmtlist();
     if (! retflag)
         gen_ret(); /* return */
+    gen_epilog();
     return;
   }
 
@@ -702,6 +688,7 @@ void extdef() {
     write('oct,');
     printo(-cval);
     write('\n');
+    gen_epilog();
     return;
   }
 
@@ -710,6 +697,7 @@ void extdef() {
     write('oct,');
     printo(cval);
     write('\n');
+    gen_epilog();
     return;
   }
 
@@ -717,6 +705,7 @@ void extdef() {
     write('   ,');
     write('oct,');
     write('\n');
+    gen_epilog();
     return;
   }
 
@@ -756,6 +745,7 @@ done:
       number(c);
       write('\n');
     }
+    gen_epilog();
     return;
   }
 
@@ -899,6 +889,26 @@ void blkend() {
     i = i+1;
   } */
   isn = 0;
+}
+
+void gen_prolog(int *s) {
+  write(' ');
+  name(s);
+  write(':,na');
+  write('me,\n');
+  if ((s[0] == 'm') & (s[1] == 'a') & (s[2] == 'i') & (s[3] == 'n') & (s[4] == 0)) {
+    write(' pro');
+    write('gram');
+    write(':,en');
+    write('try,');
+    write('*n');
+  }
+}
+
+void gen_epilog() {
+  write('   ,');
+  write('end,');
+  write('\n');
 }
 
 void gen_const(int n) {
@@ -1163,5 +1173,4 @@ int isn;
 int nerror;
 int nauto;
 int nparam;
-int nentry;
 int retflag;

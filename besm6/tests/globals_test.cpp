@@ -21,6 +21,7 @@ TEST_F(besm6, empty_program)
         }
     )");
     EXPECT_EQ(output, R"( main:,name,
+ program:,entry,
    ,its,7
    ,its,13
    ,its,

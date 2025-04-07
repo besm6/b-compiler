@@ -3,17 +3,12 @@
  */
 
 main() {
-  extrn symtab, eof, ns, nentry;
+  extrn symtab, eof, ns;
 
   while (!eof) {
     ns = &symtab[51];
     extdef();
     blkend();
-  }
-  if (nentry > 0) {
-    write('   ,');
-    write('end,');
-    write('*n');
   }
 }
 
@@ -543,7 +538,7 @@ done:
 }
 
 extdef() {
-  extrn peeksym, csym, cval, nauto, nparam, nentry, retflag;
+  extrn peeksym, csym, cval, nauto, nparam, retflag;
   auto o, c;
 
   o = symbol();
@@ -554,19 +549,7 @@ extdef() {
     goto syntax;
 
   csym[0] = 6; /* extrn */
-  if (nentry == 0) {
-    write(' ');
-    name(&csym[2]);
-    write(':,na');
-    write('me,*n');
-  } else {
-    write('*n ');
-    name(&csym[2]);
-    write(':,en');
-    write('try,');
-    write('*n');
-  }
-  nentry = nentry + 1;
+  gen_prolog(&csym[2]);
   o = symbol();
 
   if (o == 2 | o == 6) { /* { ( */
@@ -586,6 +569,7 @@ extdef() {
     stmtlist();
     if (! retflag)
         gen_ret(); /* return */
+    gen_epilog();
     return;
   }
 
@@ -596,6 +580,7 @@ extdef() {
     write('oct,');
     printo(-cval);
     write('*n');
+    gen_epilog();
     return;
   }
 
@@ -604,6 +589,7 @@ extdef() {
     write('oct,');
     printo(cval);
     write('*n');
+    gen_epilog();
     return;
   }
 
@@ -611,6 +597,7 @@ extdef() {
     write('   ,');
     write('oct,');
     write('*n');
+    gen_epilog();
     return;
   }
 
@@ -650,6 +637,7 @@ done:
       number(c);
       write('*n');
     }
+    gen_epilog();
     return;
   }
 
@@ -793,6 +781,26 @@ blkend() {
     i = i+1;
   } */
   isn = 0;
+}
+
+gen_prolog(s) {
+  write(' ');
+  name(s);
+  write(':,na');
+  write('me,*n');
+  if (s[0] == 'm' & s[1] == 'a' & s[2] == 'i' & s[3] == 'n' & s[4] == 0) {
+    write(' pro');
+    write('gram');
+    write(':,en');
+    write('try,');
+    write('*n');
+  }
+}
+
+gen_epilog() {
+  write('   ,');
+  write('end,');
+  write('*n');
 }
 
 gen_const(n) {
@@ -1057,5 +1065,4 @@ isn;
 nerror;
 nauto;
 nparam;
-nentry;
 retflag;
