@@ -802,12 +802,12 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
 }
 
 //
-// Generate code for a comparison operation.
+// Generate code for comparison operation.
 //
-static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op)
+static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op, int level)
 {
     fprintf(out, "  push %%rax\n");
-    expression(args, in, out, op >= CMP_EQ ? 6 : 5);
+    expression(args, in, out, level);
     fprintf(out,
         "  pop %%rdi\n"
         "  cmp %%rax, %%rdi\n"
@@ -815,6 +815,115 @@ static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_o
         "  movzb %%al, %%rax\n",
         cmp_instruction[op]
     );
+}
+
+//
+// Generate code for assignment operation:
+//      =+
+//      =-
+//      =*
+//      =/
+//      =%
+//      =<<
+//      =<=
+//      =<
+//      =>>
+//      =>=
+//      =>
+//      =!
+//      ===
+//      =&
+//      =|
+//
+static void assign_expr(struct compiler_args *args, FILE *in, FILE *out, char c, int level)
+{
+    switch (c) {
+    case '+': /* addition operator */
+    case '*': /* multiplication operator */
+        fprintf(out, "  push %%rax\n");
+        expression(args, in, out, level);
+        fprintf(out, "  pop %%rdi\n  %s %%rdi, %%rax\n", c == '+' ? "add" : "imul");
+        break;
+
+    case '-': /* subtraction operator */
+        fprintf(out, "  push %%rax\n");
+        expression(args, in, out, level);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
+        break;
+
+    case '/': /* division operator */
+    case '%': /* modulo operator */
+        fprintf(out, "  push %%rax\n");
+        expression(args, in, out, level);
+        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+        if (c == '%')
+            fprintf(out, "  mov %%rdx, %%rax\n");
+        break;
+
+    case '<':
+        switch (c = fgetc(in)) {
+        case '<': /* shift-left operator */
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, level);
+            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
+            break;
+        case '=': /* less-than-or-equal operator */
+            cmp_expr(args, in, out, CMP_LE, level);
+            break;
+        default: /* less-than operator */
+            ungetc(c, in);
+            cmp_expr(args, in, out, CMP_LT, level);
+        }
+        break;
+
+    case '>':
+        switch (c = fgetc(in)) {
+        case '>': /* shift-right-operator */
+            fprintf(out, "  push %%rax\n");
+            expression(args, in, out, level);
+            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
+            break;
+        case '=': /* greater-than-or-equal operator */
+            cmp_expr(args, in, out, CMP_GE, level);
+            break;
+        default: /* greater-than operator */
+            ungetc(c, in);
+            cmp_expr(args, in, out, CMP_GT, level);
+        }
+        break;
+
+    case '!': /* inequality operator */
+        if ((c = fgetc(in)) != '=') {
+            eprintf(args->arg0, "unknown operator " QUOTE_FMT("!%c") "\n", c);
+            exit(1);
+        }
+        cmp_expr(args, in, out, CMP_NE, level);
+        break;
+
+    case '=': /* equality operator */
+        if ((c = fgetc(in)) != '=') {
+            eprintf(args->arg0, "unknown operator " QUOTE_FMT("=%c") "\n", c);
+            exit(1);
+        }
+        cmp_expr(args, in, out, CMP_EQ, level);
+        break;
+
+    case '&': /* bitwise and operator */
+        fprintf(out, "  push %%rax\n");
+        expression(args, in, out, level);
+        fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
+        break;
+
+    case '|': /* bitwise or operator */
+        fprintf(out, "  push %%rax\n");
+        expression(args, in, out, level);
+        fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
+        break;
+
+    default: /* plain assignment */
+        ungetc(c, in);
+        expression(args, in, out, level);
+    }
 }
 
 //
@@ -931,7 +1040,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                cmp_expr(args, in, out, CMP_LE);
+                cmp_expr(args, in, out, CMP_LE, 5);
                 continue;
             }
             ungetc(c2, in);
@@ -941,7 +1050,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                cmp_expr(args, in, out, CMP_LT);
+                cmp_expr(args, in, out, CMP_LT, 5);
                 continue;
             }
         }
@@ -964,7 +1073,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                cmp_expr(args, in, out, CMP_GE);
+                cmp_expr(args, in, out, CMP_GE, 5);
                 continue;
             }
             ungetc(c2, in);
@@ -974,7 +1083,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                cmp_expr(args, in, out, CMP_GT);
+                cmp_expr(args, in, out, CMP_GT, 5);
                 continue;
             }
         }
@@ -988,7 +1097,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            cmp_expr(args, in, out, CMP_NE);
+            cmp_expr(args, in, out, CMP_NE, 6);
             continue;
         }
         if (level >= 8 && c == '&') {
@@ -1021,24 +1130,24 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                cmp_expr(args, in, out, CMP_EQ);
+                cmp_expr(args, in, out, CMP_EQ, 6);
                 continue;
             }
-            ungetc(c2, in);
-
-            if (level >= 14 && c == '=') {
-                /* assignment operator, right associative */
+            if (level >= 14) {
+                //
+                // Assignment operator, right associative.
+                //
                 if (!left_is_lvalue) {
                     eprintf(args->arg0, "left operand of assignment has to be an lvalue");
                     exit(1);
                 }
-
                 fprintf(out, "  push %%rax\n  mov (%%rax), %%rax\n");
-                expression(args, in, out, 14);
+                assign_expr(args, in, out, c2, 14);
                 fprintf(out, "  pop %%rdi\n  mov %%rax, (%%rdi)\n");
                 left_is_lvalue = false;
                 continue;
             }
+            ungetc(c2, in);
         }
 
         // No more operations at this level.
