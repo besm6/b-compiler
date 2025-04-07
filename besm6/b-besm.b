@@ -1,7 +1,5 @@
 /*
  * B compiler for BESM-6.
- *
- * TODO: generate Madlen assembly code.
  */
 
 main() {
