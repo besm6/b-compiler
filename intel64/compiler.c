@@ -51,6 +51,55 @@ const char* cmp_instruction[CMP_NE + 1] = {
     "setne",
 };
 
+enum binary_operator {
+    /* + */     BIN_ADD = 0,
+    /* - */     BIN_SUB,
+    /* * */     BIN_MUL,
+    /* / */     BIN_DIV,
+    /* % */     BIN_MOD,
+    /* << */    BIN_SHL,
+    /* >> */    BIN_SAR,
+    /* & */     BIN_AND,
+    /* | */     BIN_OR,
+};
+
+const char* binary_code[BIN_OR + 1] = {
+    /* + */     "  pop %rdi\n"
+                "  add %rdi, %rax\n",
+
+    /* - */     "  mov %rax, %rdi\n"
+                "  pop %rax\n"
+                "  sub %rdi, %rax\n",
+
+    /* * */     "  pop %rdi\n"
+                "  imul %rdi, %rax\n",
+
+    /* / */     "  mov %rax, %rdi\n"
+                "  pop %rax\n"
+                "  cqo\n"
+                "  idiv %rdi\n",
+
+    /* % */     "  mov %rax, %rdi\n"
+                "  pop %rax\n"
+                "  cqo\n"
+                "  idiv %rdi\n"
+                "  mov %rdx, %rax\n",
+
+    /* << */    "  mov %rax, %rcx\n"
+                "  pop %rax\n"
+                "  shl %cl, %rax\n",
+
+    /* >> */    "  mov %rax, %rcx\n"
+                "  pop %rax\n"
+                "  sar %cl, %rax\n",
+
+    /* & */     "  pop %rdi\n"
+                "  and %rdi, %rax\n",
+
+    /* | */     "  pop %rdi\n"
+                "  or %rdi, %rax\n",
+};
+
 struct stack_var {
     char* name;
     unsigned long offset;
@@ -807,6 +856,16 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
 }
 
 //
+// Generate code for binary operation.
+//
+static void binary_expr(struct compiler_args *args, FILE *in, FILE *out, enum binary_operator op, int level)
+{
+    fprintf(out, "  push %%rax\n");
+    expression(args, in, out, level);
+    fputs(binary_code[op], out);
+}
+
+//
 // Generate code for comparison operation.
 //
 static void cmp_expr(struct compiler_args *args, FILE *in, FILE *out, enum cmp_operator op, int level)
@@ -844,33 +903,29 @@ static void assign_expr(struct compiler_args *args, FILE *in, FILE *out, char c,
 {
     switch (c) {
     case '+': /* addition operator */
+        binary_expr(args, in, out, BIN_ADD, level);
+        break;
+
     case '*': /* multiplication operator */
-        fprintf(out, "  push %%rax\n");
-        expression(args, in, out, level);
-        fprintf(out, "  pop %%rdi\n  %s %%rdi, %%rax\n", c == '+' ? "add" : "imul");
+        binary_expr(args, in, out, BIN_MUL, level);
         break;
 
     case '-': /* subtraction operator */
-        fprintf(out, "  push %%rax\n");
-        expression(args, in, out, level);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
+        binary_expr(args, in, out, BIN_SUB, level);
         break;
 
     case '/': /* division operator */
+        binary_expr(args, in, out, BIN_DIV, level);
+        break;
+
     case '%': /* modulo operator */
-        fprintf(out, "  push %%rax\n");
-        expression(args, in, out, level);
-        fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-        if (c == '%')
-            fprintf(out, "  mov %%rdx, %%rax\n");
+        binary_expr(args, in, out, BIN_MOD, level);
         break;
 
     case '<':
         switch (c = fgetc(in)) {
         case '<': /* shift-left operator */
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, level);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
+            binary_expr(args, in, out, BIN_SHL, level);
             break;
         case '=': /* less-than-or-equal operator */
             cmp_expr(args, in, out, CMP_LE, level);
@@ -884,9 +939,7 @@ static void assign_expr(struct compiler_args *args, FILE *in, FILE *out, char c,
     case '>':
         switch (c = fgetc(in)) {
         case '>': /* shift-right-operator */
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, level);
-            fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
+            binary_expr(args, in, out, BIN_SAR, level);
             break;
         case '=': /* greater-than-or-equal operator */
             cmp_expr(args, in, out, CMP_GE, level);
@@ -914,15 +967,11 @@ static void assign_expr(struct compiler_args *args, FILE *in, FILE *out, char c,
         break;
 
     case '&': /* bitwise and operator */
-        fprintf(out, "  push %%rax\n");
-        expression(args, in, out, level);
-        fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
+        binary_expr(args, in, out, BIN_AND, level);
         break;
 
     case '|': /* bitwise or operator */
-        fprintf(out, "  push %%rax\n");
-        expression(args, in, out, level);
-        fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
+        binary_expr(args, in, out, BIN_OR, level);
         break;
 
     default: /* plain assignment */
@@ -976,9 +1025,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 3);
-            fprintf(out, "  pop %%rdi\n  add %%rdi, %%rax\n");
+            binary_expr(args, in, out, BIN_ADD, 3);
             continue;
         }
         if (level >= 4 && c == '-') {
@@ -987,9 +1034,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 3);
-            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  sub %%rdi, %%rax\n");
+            binary_expr(args, in, out, BIN_SUB, 3);
             continue;
         }
         if (level >= 3 && c == '*') {
@@ -998,9 +1043,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 2);
-            fprintf(out, "  pop %%rdi\n  imul %%rdi, %%rax\n");
+            binary_expr(args, in, out, BIN_MUL, 2);
             continue;
         }
         if (level >= 3 && c == '/') {
@@ -1009,9 +1052,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 2);
-            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
+            binary_expr(args, in, out, BIN_DIV, 2);
             continue;
         }
         if (level >= 3 && c == '%') {
@@ -1020,10 +1061,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 2);
-            fprintf(out, "  mov %%rax, %%rdi\n  pop %%rax\n  cqo\n  idiv %%rdi\n");
-            fprintf(out, "  mov %%rdx, %%rax\n");
+            binary_expr(args, in, out, BIN_MOD, 2);
             continue;
         }
         if (c == '<') {
@@ -1034,9 +1072,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                fprintf(out, "  push %%rax\n");
-                expression(args, in, out, 4);
-                fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  shl %%cl, %%rax\n");
+                binary_expr(args, in, out, BIN_SHL, 4);
                 continue;
             }
             if (level >= 6 && c2 == '=') {
@@ -1067,9 +1103,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                     fprintf(out, "  mov (%%rax), %%rax\n");
                     left_is_lvalue = false;
                 }
-                fprintf(out, "  push %%rax\n");
-                expression(args, in, out, 4);
-                fprintf(out, "  mov %%rax, %%rcx\n  pop %%rax\n  sar %%cl, %%rax\n");
+                binary_expr(args, in, out, BIN_SAR, 4);
                 continue;
             }
             if (level >= 6 && c2 == '=') {
@@ -1111,9 +1145,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 7);
-            fprintf(out, "  pop %%rdi\n  and %%rdi, %%rax\n");
+            binary_expr(args, in, out, BIN_AND, 7);
             continue;
         }
         if (level >= 10 && c == '|') {
@@ -1122,9 +1154,7 @@ static void expression(struct compiler_args *args, FILE *in, FILE *out, int leve
                 fprintf(out, "  mov (%%rax), %%rax\n");
                 left_is_lvalue = false;
             }
-            fprintf(out, "  push %%rax\n");
-            expression(args, in, out, 9);
-            fprintf(out, "  pop %%rdi\n  or %%rdi, %%rax\n");
+            binary_expr(args, in, out, BIN_OR, 9);
             continue;
         }
         if (c == '=') {
