@@ -40,6 +40,17 @@ std::string besm6::compile(const std::string &source_code)
 }
 
 //
+// Compile B program for besm6 and run it.
+// Return output.
+//
+std::string besm6::compile_and_run(const std::string &source_code)
+{
+    //TODO
+    std::string result;
+    return result;
+}
+
+//
 // Read file contents and return it as a string.
 //
 std::string file_contents(const std::string &filename)

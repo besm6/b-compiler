@@ -1,0 +1,47 @@
+c---------------------------------------------------------------
+c Save registers on the stack.
+c Called on entry to each B function with one or more parameters.
+c
+    b/save: ,name,
+         15 ,j+m, 14
+            ,its, 7
+            ,its, 6
+            ,its,
+         14 ,mtj, 6
+         15 ,mtj, 7
+         13 ,uj,
+            ,end,
+c---------------------------------------------------------------
+c Save registers on the stack.
+c Called on entry to each B function with no parameters.
+c
+   b/save0: ,name,
+         15 ,mtj, 14
+            ,its, 7
+            ,its, 6
+            ,its,
+         14 ,mtj, 6
+         15 ,mtj, 7
+         13 ,uj,
+            ,end,
+c---------------------------------------------------------------
+c Restore registers from the stack.
+c Called on exit from a B function.
+c
+     b/ret: ,name,
+          6 ,mtj, 14
+          7 ,mtj, 15
+          7 ,stx, -4
+            ,sti, 6
+            ,sti, 7
+            ,sti, 13
+         14 ,mtj, 15
+         13 ,uj,
+            ,end,
+c---------------------------------------------------------------
+c Terminate the program.
+c No return.
+c
+      exit: ,name,
+            ,*74,
+            ,end,

@@ -3,7 +3,7 @@ CFLAGS  = -O -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
 
-all:    $(PROG) hello.madlen test1.madlen
+all:    $(PROG)
 
 install:
 
@@ -22,17 +22,11 @@ build:
 #
 bbesm:  b-besm.b
 	bcause $< -o $@
-	nm -n $@ > b.nm
-	objdump -S $@ > b.dis
+	#nm -n $@ > b.nm
+	#objdump -S $@ > b.dis
 
 #
 # Build B compiler from C source
 #
 bcbesm: b-proto.c
 	$(CC) $(CFLAGS) $< -o $@
-
-hello.madlen: bcbesm ../examples/hello.b
-	./bcbesm < ../examples/hello.b > $@
-
-test1.madlen: bcbesm test1.b
-	./bcbesm < test1.b > $@

@@ -24,6 +24,10 @@ protected:
     // Compile B code.
     // Return assembly output.
     std::string compile(const std::string &input);
+
+    // Compile B program for besm6 and run it.
+    // Return output of the program.
+    std::string compile_and_run(const std::string &input);
 };
 
 //
