@@ -51,9 +51,9 @@ TEST_F(besm6, hello_write)
   14,vtm,write
     ,ita,14
     ,xts,=2206255433067412
+  14,vtm,1
   15,wtc,
- :13,31,
-    ,utc,1
+  13,vjm,
    7,stx,-3
     ,sti,13
     ,sti,7
