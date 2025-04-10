@@ -21,6 +21,17 @@ TEST_F(besm6, libb_flush_writeb)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, libb_okno)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            OKHO();
+        }
+    )");
+    const std::string expect = "0000000000001052          004   00000 00000 00000 00000 00000 53402 53405 00000 00000 00000 00000 00000 01004 01052 53405\n";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, libb_write)
 {
     auto output = compile_and_run(R"(
