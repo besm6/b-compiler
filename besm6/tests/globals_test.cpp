@@ -22,14 +22,9 @@ TEST_F(besm6, empty_program)
     )");
     EXPECT_EQ(output, R"( main:,name,
  program:,entry,
-    ,its,7
     ,its,13
-    ,its,
-  15,mtj,7
-   7,stx,-3
-    ,sti,13
-    ,sti,7
-  13,uj,
+  13,vjm,b/save0
+    ,uj, b/ret
     ,end,
 )");
 }
@@ -43,10 +38,8 @@ TEST_F(besm6, hello_write)
     )");
     EXPECT_EQ(output, R"( main:,name,
  program:,entry,
-    ,its,7
     ,its,13
-    ,its,
-  15,mtj,7
+  13,vjm,b/save0
  write:,subp,
   14,vtm,write
     ,ita,14
@@ -54,10 +47,7 @@ TEST_F(besm6, hello_write)
   14,vtm,1
   15,wtc,
   13,vjm,
-   7,stx,-3
-    ,sti,13
-    ,sti,7
-  13,uj,
+    ,uj, b/ret
     ,end,
 )");
 }

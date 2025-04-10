@@ -555,7 +555,6 @@ extdef() {
   o = symbol();
 
   if (o == 2 | o == 6) { /* { ( */
-    gen_savstk();
     nauto = 0;
     nparam = 0;
     if (o == 6) { /* ( */
@@ -563,6 +562,7 @@ extdef() {
       if ((o = symbol()) != 2) /* { */
         goto syntax;
     }
+    gen_bsave();
     while ((o = symbol()) == 19 & cval < 10) /* auto extrn */
       declare(cval);
     peeksym = o;
@@ -570,7 +570,7 @@ extdef() {
         gen_stackp(nauto); /* setop */
     stmtlist();
     if (! retflag)
-        gen_ret(); /* return */
+        gen_bret(); /* return */
     gen_epilog();
     return;
   }
@@ -695,7 +695,7 @@ next:
     if (cval == 11) { /* return */
       if ((peeksym = symbol()) == 6) /* ( */
         pexpr();
-      gen_ret(); /* return */
+      gen_bret(); /* return */
       retflag = 1;
       goto semi;
     }
@@ -819,49 +819,26 @@ gen_const(n) {
   write('*n');
 }
 
-gen_savstk() {
-  /* save old frame pointer */
-  write('    ');
-  write(',its,7');
-  write('*n');
+gen_bsave() {
+  extrn nparam;
 
-  /* save return address */
+  /* call b/save or b/save0 */
   write('    ');
   write(',its,13');
   write('*n');
-  write('    ');
-  write(',its,');
-  write('*n');
-
-  /* set frame pointer */
-  write('  15');
-  write(',mtj,7');
-  write('*n');
+  write('  13');
+  write(',vjm,b/');
+  if (nparam == 0)
+    write('save0*n');
+  else
+    write('save*n');
 }
 
-gen_ret() {
-  extrn nparam;
-
-  /* save return value */
-  write('   7');
-  write(',stx,-3');
-  write('*n');
-
-  /* restore return address and old stack pointer */
+gen_bret() {
+  /* call b/ret */
   write('    ');
-  write(',sti,13');
-  write('*n');
-  write('    ');
-  write(',sti,7');
-  write('*n');
-  if (nparam > 0) {
-    write('  15');
-    write(',utm,');
-    number(-nparam);
-    write('*n');
-  }
-  write('  13');
-  write(',uj,*n');
+  write(',uj, b/');
+  write('ret*n');
 }
 
 gen_stackp(n) {
