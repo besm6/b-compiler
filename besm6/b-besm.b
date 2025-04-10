@@ -32,7 +32,7 @@ lookup() {
   }
   sp = symbuf;
   if (ns >= &symtab[290]) {
-    error('sf');
+    error("Symbol table overflow");
     eof = 1;
     return (rp);
   }
@@ -105,7 +105,7 @@ com:
 com1:
     if (c == 4) {
       eof = 1;
-      error('**/'); /* eof */
+      error("Unexpected end of file");
       return (0);
     }
     if (c == '*n')
@@ -154,7 +154,7 @@ com1:
     return (20); /* name */
   }
   if (ct == 127) { /* unknown */
-    error('sy');
+    error("Invalid character");
     c = read();
     goto loop;
   }
@@ -196,7 +196,7 @@ getcc() {
     return;
   cval = (cval << 8) | c;       /* character #6 */
   if (mapch('*'') >= 0)
-    error('cc');
+    error("Too long character literal");
 }
 
 getstr() {
@@ -254,7 +254,7 @@ mapch(c) {
     return (-1);
 
   if (a == '*n' | a == 0 | a == 4) {
-    error('cc');
+    error("Unterminated string");
     peekc = a;
     return (-1);
   }
@@ -288,7 +288,7 @@ mapch(c) {
 
 expr(lev) {
   extrn peeksym, csym, cval, isn, retflag;
-  auto o;
+  auto o, narg;
 
   retflag = 0;
   o = symbol();
@@ -314,22 +314,19 @@ case21:
     if (*csym == 0) { /* not seen */
       if ((peeksym = symbol()) == 6) { /* ( */
         *csym = 6; /* extrn */
-        gen_extern();
+        gen_subp();
       } else {
-        *csym = 2; /* internal */
+        *csym = 2; /* internal label */
         csym[1] = isn;
         isn = isn+1;
       }
     }
-    if (*csym == 5) /* auto */
+    if (*csym == 5) { /* auto */
       gen_auto(csym[1]);
-    else if (*csym == 8) /* param */
+    } else if (*csym == 8) { /* param */
       gen_param(csym[1]);
-    else if (*csym == 6) { /* extrn */
-      write('    ');
-      write(',xts,');
-      name(&csym[2]);
-      write('*n');
+    } else if (*csym == 6) { /* extrn */
+      gen_extrn();
     } else { /* internal */
       write('  14');
       write(',vtm,');
@@ -383,7 +380,7 @@ case21:
     pexpr();
     goto loop;
   }
-  error('ex');
+  error("Bad expression");
 
 loop:
   o = symbol();
@@ -469,7 +466,7 @@ loop:
   if (o == 4) { /* [ */
     expr(15);
     if (symbol() != 5)
-      error('[]');
+      error("Bad array index");
     gen_helper('vect'); /* vector */
     goto loop;
   }
@@ -478,17 +475,18 @@ loop:
     if (o == 7) /* ) */
       gen_mcall();
     else {
-      /*gen_mark();*/
+      narg = 0;
       peeksym = o;
       while (o != 7) { /* not ) */
         expr(15);
         o = symbol();
         if (o != 7 & o != 9) { /* not ) or , */
-          error('ex');
+          error("Bad function argument");
           return;
         }
+        narg++;
       }
-      gen_call();
+      gen_call(narg);
     }
     goto loop;
   }
@@ -502,7 +500,7 @@ pexpr() {
     if (symbol() == 7) /* ) */
       return;
   }
-  error('()');
+  error("Unbalanced parentheses in expression");
 }
 
 declare(kw) {
@@ -512,7 +510,7 @@ declare(kw) {
   while ((o = symbol()) == 20) { /* name */
     if (kw == 6) { /* extrn */
       *csym = 6;
-      gen_extern();
+      gen_subp();
       o = symbol();
     } else if (kw == 8) { /* param */
       *csym = 8; /* param */
@@ -536,7 +534,7 @@ done:
   if (o == 1 & kw != 8 | o == 7 & kw == 8) /* auto/extrn ;  param ')' */
     return;
 
-  error('[]'); /* declaration syntax */
+  error("Bad declaration syntax");
 }
 
 extdef() {
@@ -647,7 +645,7 @@ done:
     return;
 
 syntax:
-  error('xx');
+  error("Bad external declaration");
   stmt();
 }
 
@@ -661,18 +659,19 @@ stmtlist() {
     peeksym = o;
     stmt();
   }
-  error('}'); /* missing } */
+  error("Missing closing brace"); /* missing } */
 }
 
 stmt() {
-  extrn peeksym, peekc, csym, cval, isn, nauto, retflag;
+  extrn peeksym, peekc, csym, cval, isn, nauto, retflag, acc_active;
   auto o, o1, o2;
 
 next:
+  acc_active = 0;
   o = symbol();
 
   if (o == 0) { /* eof */
-    error('fe'); /* Unexpected eof */
+    error("Unexpected end of file");
     return;
   }
 
@@ -735,18 +734,20 @@ next:
       return;
     }
 
-    error('sx');
+    error("Unrecognized keyword");
     goto syntax;
   }
 
   if (o == 20 & peekc == ':') { /* name : */
     peekc = 0;
     if (!*csym) {
-      *csym = 2; /* param */
+      *csym = 2; /* internal label */
       csym[1] = isn;
       isn = isn+1;
     } else if (*csym != 2) {
-      error('rd');
+      error("Label redefined");
+      printf("At name: ");
+      name(&csym[2]);
       goto next;
     }
     label(csym[1]);
@@ -762,7 +763,7 @@ semi:
     return;
 
 syntax:
-  error('sz');
+  error("Bad statement syntax");
   goto next;
 }
 
@@ -784,6 +785,16 @@ blkend() {
   isn = 0;
 }
 
+assert_lvalue() {
+  /* make sure accumulator has lvalue */
+  extrn acc_active, is_lvalue;
+  if (!acc_active) {
+    error("Inactive accumulator");
+  } else if (!is_lvalue) {
+    error("Lvalue needed");
+  }
+}
+
 gen_prolog(s) {
   write(' ');
   name(s);
@@ -803,7 +814,7 @@ gen_epilog() {
   write('*n');
 }
 
-gen_extern() {
+gen_subp() {
   extrn csym;
 
   write(' ');
@@ -812,17 +823,45 @@ gen_extern() {
   write('*n');
 }
 
-gen_const(n) {
+/* Put address of external name on accumulator. */
+gen_extrn() {
+  extrn csym, acc_active, is_lvalue;
+
+  write('  14');
+  write(',vtm,');
+  name(&csym[2]);
+  write('*n');
+
   write('    ');
-  write(',xts,=');
+  if (acc_active)
+    write(',its,');
+  else
+    write(',ita,');
+  write('14*n');
+
+  acc_active = 1;
+  is_lvalue = 1;
+}
+
+gen_const(n) {
+  extrn acc_active, is_lvalue;
+
+  write('    ');
+  if (acc_active)
+    write(',xts,=');
+  else
+    write(',xta,=');
   printo(n);
   write('*n');
+
+  acc_active = 1;
+  is_lvalue = 0;
 }
 
 gen_bsave() {
+  /* call b/save or b/save0 */
   extrn nparam;
 
-  /* call b/save or b/save0 */
   write('    ');
   write(',its,13');
   write('*n');
@@ -851,32 +890,67 @@ gen_stackp(n) {
 
 gen_mcall() {
   /* call without parameters */
-  write('  13');
-  write(',vjm,');
-  /* TODO: name */
+  extrn acc_active;
+
+  assert_lvalue();
+  write('    ');
+  write(',ati,14');
   write('*n');
+
+  write('  14');
+  write(',utc,*n');
+
+  write('  13');
+  write(',vjm,*n');
+  acc_active = 1;
 }
 
-gen_call() {
+gen_call(narg) {
   /* call with parameters */
-  write('  13');
-  write(',vjm,');
-  /* TODO: name */
+  extrn acc_active;
+
+  write('  14');
+  write(',vtm,');
+  number(-narg);
   write('*n');
+
+  if (narg > 1) {
+    write('  15');
+    write(',wtc,');
+    number(-narg);
+    write('*n');
+  } else {
+    write('  15');
+    write(',wtc,*n');
+  }
+  write('  13');
+  write(',vjm,*n');
+  if (narg > 1) {
+    write('  15');
+    write(',utc,-1');
+  }
+  acc_active = 1;
 }
 
 gen_goto() {
+  /* jump to address */
+  extrn acc_active;
+
+  assert_lvalue();
   write('    ');
-  write(',sti,14');
+  write(',ati,14');
   write('*n');
+
   write('  14');
   write(',uj,');
   write('*n');
+
+  acc_active = 0;
 }
 
 gen_helper(name) {
   /* call helper routine */
-  write('  14');
+  write('  13');
   write(',vjm,b/');
   write(name);
   write('*n');
@@ -884,20 +958,30 @@ gen_helper(name) {
 
 gen_auto(offset) {
   /* read auto variable */
+  extrn acc_active;
+
   write('   7');
-  write(',xts,');
+  if (acc_active)
+    write(',xts,');
+  else
+    write(',xta,');
   number(offset);
   write('*n');
+  acc_active = 1;
 }
 
 gen_param(offset) {
   /* read function parameter */
-  extrn nparam;
+  extrn acc_active;
 
-  write('   7');
-  write(',xts,');
-  number(offset-nparam-2);
+  write('   6');
+  if (acc_active)
+    write(',xts,');
+  else
+    write(',xta,');
+  number(offset);
   write('*n');
+  acc_active = 1;
 }
 
 jumpc(n) {
@@ -970,28 +1054,15 @@ name(s) {
   }
 }
 
-error(code) {
-  extrn line, eof, csym, nerror, fout;
-  auto f;
+error(msg) {
+  extrn line, eof, nerror;
 
   if (eof | nerror == 20) {
     eof = 1;
     return;
   }
-  nerror = nerror+1;
-  flush();
-  f = fout;
-  fout = 1;
-  write(code);
-  write(' ');
-  if (code == 'rd' | code == 'un') {
-    name(&csym[2]);
-    write(' ');
-  }
-  printn(line);
-  write('*n');
-  flush();
-  fout = f;
+  nerror = nerror + 1;
+  printf("Error at line %d: %s*n", line, msg);
 }
 
 /* storage */
@@ -1023,16 +1094,18 @@ ctab[]
   123,123,123,123,123,123,123,123,  /*  p   q   r   s   t   u   v   w  */
   123,123,123,  2, 48,  3,127,127;  /*  x   y   z   {   |   }   ~  DEL */
 
-symbuf[10];
-peeksym -1;
-peekc;
-eof;
-line 1;
-csym;
-ns;
-cval;
-isn;
-nerror;
-nauto;
-nparam;
-retflag;
+symbuf[10]; /* The name currently being parsed */
+peeksym -1; /* A token returned 'back' into input stream */
+peekc;      /* Next character of input after the last parsed token */
+eof;        /* Flag: on end of input file */
+line 1;     /* Current line number in the source file */
+csym;       /* Current symbol: pointer into symtab[] for name or keyword */
+ns;         /* Next symbol: pointer to the free space of symtab[] */
+cval;       /* Numeric value of last parsed literal (number or char) or keyword */
+isn;        /* Unique internal symbol number */
+nerror;     /* Count of errors in the program */
+nauto;      /* How many auto variables allocated by current function */
+nparam;     /* How many parameters in the current function */
+retflag;    /* Flag: last statement was 'return' */
+acc_active; /* Flag: accumulator is currently in use */
+is_lvalue;  /* Flag: accumulator holds address, not actual value */
