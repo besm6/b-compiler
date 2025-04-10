@@ -862,6 +862,16 @@ gen_bsave() {
   /* call b/save or b/save0 */
   extrn nparam;
 
+  write(' b/sav');
+  if (nparam == 0)
+    write('e0:');
+  else
+    write('e:');
+  write(',subp,*n');
+  write(' b/ret');
+  write(':,subp');
+  write(',*n');
+
   write('    ');
   write(',its,13');
   write('*n');

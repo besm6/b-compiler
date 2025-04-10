@@ -22,6 +22,8 @@ TEST_F(besm6, empty_program)
     )");
     EXPECT_EQ(output, R"( main:,name,
  program:,entry,
+ b/save0:,subp,
+ b/ret:,subp,
     ,its,13
   13,vjm,b/save0
     ,uj, b/ret
@@ -38,6 +40,8 @@ TEST_F(besm6, hello_write)
     )");
     EXPECT_EQ(output, R"( main:,name,
  program:,entry,
+ b/save0:,subp,
+ b/ret:,subp,
     ,its,13
   13,vjm,b/save0
  write:,subp,
