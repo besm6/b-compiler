@@ -27,11 +27,11 @@ static void run_command(std::string &result, const std::string &cmd)
 //
 std::string besm6::compile(const std::string &source_code)
 {
-    const auto b_filename   = test_name + ".b";
+    const auto b_filename = test_name + ".b";
 
     create_file(b_filename, source_code);
 
-    // Compile B source into executable binary.
+    // Compile B source into assembly code.
     std::string result;
     run_command(result, "../bbesm < " + b_filename);
 
@@ -45,8 +45,22 @@ std::string besm6::compile(const std::string &source_code)
 //
 std::string besm6::compile_and_run(const std::string &source_code)
 {
-    //TODO
+    const auto b_filename   = test_name + ".b";
+    const auto asm_filename = test_name + ".assem";
+    const auto exe_filename = test_name + ".exe";
+
+    create_file(b_filename, source_code);
+
+    // Compile B source into assembly code.
     std::string result;
+    run_command(result, "../bbesm < " + b_filename + " > " + asm_filename);
+
+    // Compile assembly code with B library into executable.
+    run_command(result, "besmc " + asm_filename + " ../libb.assem");
+
+    // Run executable.
+    // Return output.
+    run_command(result, "./" + exe_filename);
     return result;
 }
 

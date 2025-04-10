@@ -2,7 +2,7 @@
 
 #include "fixture.h"
 
-TEST_F(besm6, libb_writeb_flush)
+TEST_F(besm6, libb_flush_writeb)
 {
     auto output = compile_and_run(R"(
         main() {
