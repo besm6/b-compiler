@@ -142,3 +142,26 @@ c
             ,atx, w_count
          13 ,uj,
             ,end,
+c---------------------------------------------------------------
+c Append a multi-char to the stdout buffer.
+c
+   write: 8 ,name,
+c
+    writeb: ,subp,
+            ,its, 13
+            ,its,
+c
+         15 ,xta, -2            . get multi-char
+      loop: ,bss,
+            ,asn, 64+40         . shift right
+            ,call, writeb
+c
+         15 ,xta, -2            . get multi-char
+            ,asn, 64-8          . shift left
+         15 ,atx, -2            . update multi-char
+            ,u1a, loop
+c
+            ,sti,
+            ,sti, 13
+         13 ,uj,
+            ,end,
