@@ -80,7 +80,7 @@ TEST_F(besm6, DISABLED_libb_exit)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_char)
+TEST_F(besm6, libb_char)
 {
     auto output = compile_and_run(R"(
         main() {

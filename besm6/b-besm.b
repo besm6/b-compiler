@@ -206,41 +206,55 @@ getstr() {
   i = 1;
 loop:
   if ((c = mapch('"')) < 0) {
-    number(0);
+    write('    ');
+    write(',log,');
+    printo(0);
     write('*n');
     return (i);
   }
   word = c;                     /* character #1 */
   if ((c = mapch('"')) < 0) {
-    number(word << 40);
+    write('    ');
+    write(',log,');
+    printo(word << 40);
     write('*n');
     return (i);
   }
   word = (word << 8) | c;       /* character #2 */
   if ((c = mapch('"')) < 0) {
-    number(word << 32);
+    write('    ');
+    write(',log,');
+    printo(word << 32);
     write('*n');
     return (i);
   }
   word = (word << 8) | c;       /* character #3 */
   if ((c = mapch('"')) < 0) {
-    number(word << 24);
+    write('    ');
+    write(',log,');
+    printo(word << 24);
     write('*n');
     return (i);
   }
   word = (word << 8) | c;       /* character #4 */
   if ((c = mapch('"')) < 0) {
-    number(word << 16);
+    write('    ');
+    write(',log,');
+    printo(word << 16);
     write('*n');
     return (i);
   }
   word = (word << 8) | c;       /* character #5 */
   if ((c = mapch('"')) < 0) {
-    number(word << 8);
+    write('    ');
+    write(',log,');
+    printo(word << 8);
     write('*n');
     return (i);
   }
-  number((word << 8) | c);      /* character #6 */
+  write('    ');
+  write(',log,');
+  printo((word << 8) | c);      /* character #6 */
   write('*n');
   i = i+1;
   goto loop;
@@ -300,13 +314,7 @@ case21:
   }
 
   if (o == 122) { /* string */
-    write('x .+');
-    write('2*n');
-    write('t 2f');
-    write('*n');
-    write('.+1*n');
-    getstr();
-    write('2:*n');
+    gen_string();
     goto loop;
   }
 
@@ -327,16 +335,8 @@ case21:
       gen_param(csym[1]);
     } else if (*csym == 6) { /* extrn */
       gen_extrn();
-    } else { /* internal */
-      write('  14');
-      write(',vtm,');
-      write('l**');
-      number(csym[1]);
-      write('*n');
-      write('    ');
-      write(',its,');
-      write('14*n');
-      is_lvalue = 1;
+    } else { /* internal label */
+      gen_intern(csym[1]);
     }
     goto loop;
   }
@@ -849,6 +849,28 @@ gen_extrn() {
   is_lvalue = 1;
 }
 
+gen_intern(n) {
+  extrn acc_active, is_lvalue;
+
+  write('  14');
+  write(',vtm,');
+  write('l**');
+  number(n);
+  write('*n');
+
+  write('    ');
+  if (acc_active)
+    write(',its,');
+  else
+    write(',ita,');
+  write('14*n');
+
+  acc_active = 1;
+
+  /* treat address of label or string as a regular number */
+  is_lvalue = 0;
+}
+
 gen_const(n) {
   extrn acc_active, is_lvalue;
 
@@ -943,7 +965,7 @@ gen_call(narg) {
   write(',vjm,*n');
   if (narg > 1) {
     write('  15');
-    write(',utc,-1');
+    write(',utc,-1*n');
   }
   acc_active = 1;
 }
@@ -952,7 +974,6 @@ gen_goto() {
   /* jump to address */
   extrn acc_active;
 
-  assert_lvalue();
   write('    ');
   write(',ati,14');
   write('*n');
@@ -1036,6 +1057,19 @@ gen_rvalue() {
     write(',xta,*n');
     is_lvalue = 0;
   }
+}
+
+gen_string() {
+  extrn isn;
+  auto str_id, skip_id;
+
+  str_id = isn++;
+  skip_id = isn++;
+  jump(skip_id);
+  label(str_id);
+  getstr();
+  label(skip_id);
+  gen_intern(str_id);
 }
 
 jumpc(n) {
