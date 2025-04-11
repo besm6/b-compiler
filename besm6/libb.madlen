@@ -84,11 +84,12 @@ c
 c
     clear:  ,bss,           . clear buffer
             ,xta,
-            ,wtc, w_count
+            ,wtc, count
             ,atx, buffer-1
-            ,xta, w_count
+            ,xta, count
             ,arx, =77777
             ,aax, =77777
+            ,atx, count
             ,u1a, clear
 c
             ,atx, b_shift
@@ -115,9 +116,10 @@ c
             ,its,
             ,call, flush
             ,sti,
-            ,sti, 13
+            ,ati, 13
 c
  putchar:   ,bss,           . append byte to buffer
+            ,sti,
             ,wtc, b_shift
             ,asn, 64-40     . shift left
             ,wtc, w_count
