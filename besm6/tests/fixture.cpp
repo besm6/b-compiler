@@ -56,7 +56,7 @@ std::string besm6::compile_and_run(const std::string &source_code)
     run_command(result, TEST_DIR "/../bbesm < " + b_filename + " > " + asm_filename);
 
     // Compile assembly code with B library into executable.
-    run_command(result, "besmc " + asm_filename + " " + TEST_DIR "/../libb.madlen");
+    run_command(result, "besmc " + asm_filename + " " + TEST_DIR "/../libb/libb.obj");
 
     // Run executable.
     // Return output.

@@ -4,13 +4,15 @@ CFLAGS  = -O -Wall -Werror -Wno-multichar
 .PHONY: all install clean test
 
 all:    $(PROG)
+	make -C libb $@
 
 install:
 
 clean:
+	make -C libb $@
 	rm -f ${PROG} *.s *.nm *.dis *.trace
 
-test:   build
+test:   all build
 	make -C build btest
 	ctest -j1 --test-dir build
 

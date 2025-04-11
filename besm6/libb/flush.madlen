@@ -1,0 +1,33 @@
+c---------------------------------------------------------------
+c Write buffered line to stdout.
+c
+   flush: 8 ,name,
+ b/output:lc,block, w_count, b_shift, buffer(22)
+c
+         12 ,vtm, buffer
+            ,*71, info
+c
+            ,xta, b_shift
+            ,u1a, clear
+            ,xta, w_count
+            ,u1a, clear
+         13 ,uj,            . buffer is empty
+c
+    clear:  ,bss,           . clear buffer
+            ,xta,
+            ,wtc, w_count
+            ,atx, buffer
+            ,xta, w_count
+            ,uza, done
+            ,arx, =77777
+            ,aax, =77777
+            ,atx, w_count
+            ,uj,  clear
+c
+      done: ,bss,
+            ,atx, b_shift
+         13 ,uj,
+c
+   info: 12 ,040,
+            ,   ,
+            ,end,
