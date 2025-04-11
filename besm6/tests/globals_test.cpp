@@ -8,7 +8,7 @@ TEST_F(besm6, global_var)
         foo;
     )");
     EXPECT_EQ(output, R"( foo:,name,
-    ,log,
+    ,bss,1
     ,end,
 )");
 }

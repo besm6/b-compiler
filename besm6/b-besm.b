@@ -552,10 +552,10 @@ extdef() {
     goto syntax;
 
   csym[0] = 6; /* extrn */
-  gen_prolog(&csym[2]);
   o = symbol();
 
   if (o == 2 | o == 6) { /* { ( */
+    gen_prolog();
     nauto = 0;
     nparam = 0;
     if (o == 6) { /* ( */
@@ -576,18 +576,14 @@ extdef() {
     return;
   }
 
-  if (o == 41) { /* - */
-    if (symbol() != 21) /* number */
-      goto syntax;
-    write('    ');
-    write(',log,');
-    printo(-cval);
-    write('*n');
-    gen_epilog();
-    return;
-  }
-
-  if (o == 21) { /* number */
+  if (o == 21 | o == 41) { /* number or - */
+    if (o == 41) { /* - */
+      if (symbol() != 21) { /* number */
+        goto syntax;
+      }
+      cval = -cval;
+    }
+    gen_prolog();
     write('    ');
     write(',log,');
     printo(cval);
@@ -597,8 +593,9 @@ extdef() {
   }
 
   if (o == 1) { /* ; */
+    gen_prolog();
     write('    ');
-    write(',log,');
+    write(',bss,1');
     write('*n');
     gen_epilog();
     return;
@@ -614,10 +611,12 @@ extdef() {
       goto syntax;
     if ((o = symbol()) == 1) /* ; */
       goto done;
+    gen_prolog();
     while (o == 21 | o == 41) { /* number - */
       if (o == 41) { /* - */
-        if (symbol() != 21)
+        if (symbol() != 21) {
           goto syntax;
+        }
         cval = -cval;
       }
       write('    ');
@@ -798,12 +797,15 @@ assert_lvalue() {
   }
 }
 
-gen_prolog(s) {
+gen_prolog() {
+  /* start Madlen module */
+  extrn csym;
+
   write(' ');
-  name(s);
-  write(':,name,');
-  write('*n');
-  if (s[0] == 'm' & s[1] == 'a' & s[2] == 'i' & s[3] == 'n' & s[4] == 0) {
+  name(&csym[2]);
+  write(':,name,*n');
+
+  if (csym[2] == 'm' & csym[3] == 'a' & csym[4] == 'i' & csym[5] == 'n' & csym[6] == 0) {
     write(' prog');
     write('ram:');
     write(',entry,');
@@ -812,6 +814,7 @@ gen_prolog(s) {
 }
 
 gen_epilog() {
+  /* finish Madlen module */
   write('    ');
   write(',end,');
   write('*n');
