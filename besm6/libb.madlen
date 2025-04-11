@@ -127,47 +127,32 @@ c
 c---------------------------------------------------------------
 c Append a multi-char to the stdout buffer.
 c
-   write: 8 ,name,
+     write: ,name,
 c
     writeb: ,subp,
+            ,its, 7
             ,its, 13
             ,its,
+          7 ,vtm, 40            . shift
 c
-         15 ,xta, -2            . get multi-char
-            ,asn, 64+40         . shift right
-            ,uza, c2
-            ,call, writeb
+     again: ,bss,
+         15 ,xta, -3            . get multi-char
+          7 ,asn, 64            . shift right
+            ,aax, =377
+            ,uza, skip
+            ,call, writeb       . print byte
 c
-      c2:   ,bss,
-         15 ,xta, -2            . get multi-char
-            ,asn, 64+32         . shift right
-            ,aax, =377
-            ,uza, c3
-            ,call, writeb
-      c3:   ,bss,
-         15 ,xta, -2            . get multi-char
-            ,asn, 64+24         . shift right
-            ,aax, =377
-            ,uza, c4
-            ,call, writeb
-      c4:   ,bss,
-         15 ,xta, -2            . get multi-char
-            ,asn, 64+16         . shift right
-            ,aax, =377
-            ,uza, c5
-            ,call, writeb
-      c5:   ,bss,
-         15 ,xta, -2            . get multi-char
-            ,asn, 64+8          . shift right
-            ,aax, =377
-            ,uza, c6
-            ,call, writeb
-      c6:   ,bss,
-         15 ,xta, -2            . get multi-char
+      skip: ,bss,
+          7 ,utm, -8            . decrease shift
+          7 ,v1m, again
+c
+         15 ,xta, -3            . last byte
             ,aax, =377
             ,call, writeb
 c
+      done: ,bss,
             ,sti,
             ,sti, 13
+            ,sti, 7
          13 ,uj,
             ,end,
