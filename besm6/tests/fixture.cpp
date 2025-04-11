@@ -33,7 +33,7 @@ std::string besm6::compile(const std::string &source_code)
 
     // Compile B source into assembly code.
     std::string result;
-    run_command(result, "../bbesm < " + b_filename);
+    run_command(result, TEST_DIR "/../bbesm < " + b_filename);
 
     // Return output.
     return result;
@@ -53,10 +53,10 @@ std::string besm6::compile_and_run(const std::string &source_code)
 
     // Compile B source into assembly code.
     std::string result;
-    run_command(result, "../bbesm < " + b_filename + " > " + asm_filename);
+    run_command(result, TEST_DIR "/../bbesm < " + b_filename + " > " + asm_filename);
 
     // Compile assembly code with B library into executable.
-    run_command(result, "besmc " + asm_filename + " ../libb.madlen");
+    run_command(result, "besmc " + asm_filename + " " + TEST_DIR "/../libb.madlen");
 
     // Run executable.
     // Return output.

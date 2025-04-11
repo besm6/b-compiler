@@ -12,7 +12,7 @@ clean:
 
 test:   build
 	make -C build btest
-	make -C build test
+	ctest -j1 --test-dir build
 
 build:
 	cmake -B build tests
