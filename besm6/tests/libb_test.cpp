@@ -11,7 +11,7 @@ TEST_F(besm6, libb_flush_writeb)
             writeb(053); /* + */
             writeb(10);
             writeb(061); /* 1 */
-            flush
+            flush();
         }
     )");
     const std::string expect = R"(0
