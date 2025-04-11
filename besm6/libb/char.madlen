@@ -1,6 +1,6 @@
     char: 8 ,name,
 c
-c Returns the value of a byte in a string at index.
+c Return the value of a byte in a string at index.
 c Invoked as:
 c       ch = char(str, index);
 c

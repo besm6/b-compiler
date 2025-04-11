@@ -96,7 +96,7 @@ TEST_F(besm6, libb_char)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_lchar)
+TEST_F(besm6, libb_lchar)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -108,7 +108,8 @@ TEST_F(besm6, DISABLED_libb_lchar)
             lchar(&str, 3, 'a');
             lchar(&str, 4, 'r');
             lchar(&str, 5, 0);
-            printf("%s*n", &str);
+            write(str);
+            write('*n');
         }
     )");
     const std::string expect = "fubar\n";

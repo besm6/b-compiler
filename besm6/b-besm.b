@@ -361,7 +361,8 @@ case21:
 
   if (o == 47) { /* & */
     expr(1);
-    gen_helper('uadr'); /* uadr */
+    assert_lvalue();
+    is_lvalue = 0;
     goto loop;
   }
 

@@ -1,0 +1,52 @@
+   lchar: 8 ,name,
+c
+c Replace one byte of string at index with value ch.
+c Byte ch returned.
+c Invoked as:
+c       lchar(str, index, ch);
+c
+c Characters are numbered from left to right, starting at zero.
+c Thus, if str has the value "abc", lchar(s, 1, ’x’) returns the value ’x’,
+c and sets str to have the value "axc".
+c
+            ,stx, byte
+c
+            ,aax, =777777
+         15 ,atx,
+            ,ntr, 7
+            ,a*x, =4002 5252 5252 5253 . 1/6
+         15 ,atx,
+         15 ,atx,
+            ,ati, 10        . word index
+            ,asn, 64-2
+         15 ,arx,
+         15 ,arx,
+         15 ,x-a,
+            ,ati, 11        . byte index
+c
+         15 ,wtc,           . base address
+         10 ,utm,           . word address
+         10 ,xta,
+         11 ,aax, mask
+            ,xts, byte
+         11 ,asx, shift
+         15 ,aox,
+         10 ,atx,
+c
+            ,xta, byte
+         13 ,uj,
+c
+      byte: ,bss, 1
+      mask: ,log, 7777 7777 7777 7777
+            ,log, 7777 7777 7777 7777
+            ,log, 7777 7777 7777 7777
+            ,log, 7777 7777 7777 7777
+            ,log, 7777 7777 7777 7777
+            ,log, 7777 7777 7777 7777
+     shift: ,oct, 14
+            ,oct, 20
+            ,oct, 24
+            ,oct, 30
+            ,oct, 34
+            ,oct, 40
+            ,end,
