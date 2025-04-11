@@ -179,22 +179,22 @@ getcc() {
   cval = 0;
   if ((c = mapch('*'')) < 0)
     return;
-  cval = c << 40;               /* character #1 */
+  cval = c;                     /* character #1 */
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval | (c << 32);      /* character #2 */
+  cval = (cval << 8) | c;       /* character #2 */
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval | (c << 24);      /* character #3 */
+  cval = (cval << 8) | c;       /* character #3 */
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval | (c << 16);      /* character #4 */
+  cval = (cval << 8) | c;       /* character #4 */
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval | (c << 8);       /* character #5 */
+  cval = (cval << 8) | c;       /* character #5 */
   if ((c = mapch('*'')) < 0)
     return;
-  cval = cval | c;              /* character #6 */
+  cval = (cval << 8) | c;       /* character #6 */
   if (mapch('*'') >= 0)
     error("Too long character literal");
 }

@@ -152,14 +152,38 @@ c
             ,its,
 c
          15 ,xta, -2            . get multi-char
-      loop: ,bss,
             ,asn, 64+40         . shift right
+            ,uza, c2
             ,call, writeb
 c
+      c2:   ,bss,
          15 ,xta, -2            . get multi-char
-            ,asn, 64-8          . shift left
-         15 ,atx, -2            . update multi-char
-            ,u1a, loop
+            ,asn, 64+32         . shift right
+            ,aax, =377
+            ,uza, c3
+            ,call, writeb
+      c3:   ,bss,
+         15 ,xta, -2            . get multi-char
+            ,asn, 64+24         . shift right
+            ,aax, =377
+            ,uza, c4
+            ,call, writeb
+      c4:   ,bss,
+         15 ,xta, -2            . get multi-char
+            ,asn, 64+16         . shift right
+            ,aax, =377
+            ,uza, c5
+            ,call, writeb
+      c5:   ,bss,
+         15 ,xta, -2            . get multi-char
+            ,asn, 64+8          . shift right
+            ,aax, =377
+            ,uza, c6
+            ,call, writeb
+      c6:   ,bss,
+         15 ,xta, -2            . get multi-char
+            ,aax, =377
+            ,call, writeb
 c
             ,sti,
             ,sti, 13
