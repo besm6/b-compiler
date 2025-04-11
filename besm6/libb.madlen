@@ -52,29 +52,8 @@ c
    flush: 8 ,name,
  b/output:lc,block, w_count, b_shift, buffer(22)
 c
-   terout:  ,subp,
-            ,xta, w_count
-            ,atx, count
-            ,xta, b_shift
-            ,uza, print
-c
-            ,xta, count
-            ,arx, =1
-            ,atx, count
-c
-    print:  ,bss,           . print buffer
-            ,xta, count
-            ,u1a, print1
-            ,arx, =1
-            ,atx, count
-   print1:  ,bss,
-            ,its, 13
-         14 ,vtm, buffer
-            ,its, 14
-         14 ,vtm, count
-            ,its, 14
-            ,call, terout
-            ,sti, 13
+         12 ,vtm, buffer
+            ,*71, info
 c
             ,xta, b_shift
             ,u1a, clear
@@ -84,18 +63,21 @@ c
 c
     clear:  ,bss,           . clear buffer
             ,xta,
-            ,wtc, count
-            ,atx, buffer-1
-            ,xta, count
+            ,wtc, w_count
+            ,atx, buffer
+            ,xta, w_count
+            ,uza, done
             ,arx, =77777
             ,aax, =77777
-            ,atx, count
-            ,u1a, clear
+            ,atx, w_count
+            ,uj,  clear
 c
+      done: ,bss,
             ,atx, b_shift
          13 ,uj,
 c
-    count:  ,log, 0
+   info: 12 ,040,
+            ,   ,
             ,end,
 c---------------------------------------------------------------
 c Append one byte to output buffer.
