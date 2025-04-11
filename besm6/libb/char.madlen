@@ -19,7 +19,7 @@ c
          15 ,arx,
          15 ,x-a,
             ,asn, 64-3
-            ,aax, =77
+            ,x-a, =50
             ,ati, 11        . shift
 c
          15 ,wtc,           . base address

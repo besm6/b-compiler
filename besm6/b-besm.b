@@ -965,7 +965,7 @@ gen_call(narg) {
   write(',vjm,*n');
   if (narg > 1) {
     write('  15');
-    write(',utc,-1*n');
+    write(',utm,-1*n');
   }
   acc_active = 1;
 }
