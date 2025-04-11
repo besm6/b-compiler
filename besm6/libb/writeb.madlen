@@ -1,7 +1,7 @@
-c---------------------------------------------------------------
+  writeb: 8 ,name,
+c
 c Append one byte to output buffer.
 c
-  writeb: 8 ,name,
  b/output:lc,block, w_count, b_shift, buffer(22)
 c
     flush:  ,subp,

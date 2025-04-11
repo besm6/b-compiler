@@ -1,0 +1,30 @@
+    char: 8 ,name,
+c
+c Returns the value of a byte in a string at index.
+c Invoked as:
+c       ch = char(str, index);
+c
+c Characters are numbered from left to right, starting at zero.
+c Thus char("abc", 1) returns ’b’.
+c
+            ,aax, =777777
+         15 ,atx,
+            ,ntr, 7
+            ,a*x, =4002 5252 5252 5253 . 1/6
+         15 ,atx,
+         15 ,atx,
+            ,ati, 10        . word index
+            ,asn, 64-2
+         15 ,arx,
+         15 ,arx,
+         15 ,x-a,
+            ,asn, 64-3
+            ,aax, =77
+            ,ati, 11        . shift
+c
+         15 ,wtc,           . base address
+         10 ,xta,           . word index
+         11 ,asn, 64        . shift
+            ,aax, =377
+         13 ,uj,
+            ,end,

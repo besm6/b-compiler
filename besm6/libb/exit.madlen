@@ -1,7 +1,7 @@
-c---------------------------------------------------------------
+      exit: ,name,
+c
 c Terminate the program.
 c No return.
 c
-      exit: ,name,
             ,*74,
             ,end,

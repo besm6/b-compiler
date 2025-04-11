@@ -1,7 +1,7 @@
-c---------------------------------------------------------------
+   flush: 8 ,name,
+c
 c Write buffered line to stdout.
 c
-   flush: 8 ,name,
  b/output:lc,block, w_count, b_shift, buffer(22)
 c
          12 ,vtm, buffer

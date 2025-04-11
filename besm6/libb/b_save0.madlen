@@ -1,8 +1,8 @@
-c---------------------------------------------------------------
+   b/save0: ,name,
+c
 c Save registers on the stack.
 c Called on entry to each B function with no parameters.
 c
-   b/save0: ,name,
          15 ,mtj, 14
             ,its, 7
             ,its, 6

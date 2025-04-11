@@ -1,5 +1,4 @@
-B_SOURCES = \
-        char.b
+B_SOURCES =
 # TODO: lchar.b printn.b printf.b
 
 B_ASM = $(patsubst %.b,%.madlen,$(B_SOURCES))
@@ -8,6 +7,7 @@ ASM_SOURCES = \
         b_ret.madlen \
         b_save0.madlen \
         b_save.madlen \
+        char.madlen \
         exit.madlen \
         flush.madlen \
         writeb.madlen \

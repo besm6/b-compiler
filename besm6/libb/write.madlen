@@ -1,7 +1,6 @@
-c---------------------------------------------------------------
-c Append a multi-char to the stdout buffer.
-c
      write: ,name,
+c
+c Append a multi-char to the stdout buffer.
 c
     writeb: ,subp,
             ,its, 7

@@ -1,8 +1,8 @@
-c---------------------------------------------------------------
+     b/ret: ,name,
+c
 c Restore registers from the stack.
 c Called on exit from a B function.
 c
-     b/ret: ,name,
           6 ,mtj, 14
           7 ,mtj, 15
           7 ,stx, -4
