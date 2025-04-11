@@ -970,31 +970,49 @@ gen_helper(name) {
 }
 
 gen_auto(offset) {
-  /* read auto variable */
-  extrn acc_active;
+  /* get address of auto variable */
+  extrn acc_active, is_lvalue;
 
   write('   7');
-  if (acc_active)
-    write(',xts,');
-  else
-    write(',xta,');
+  write(',utc,');
   number(offset);
   write('*n');
+
+  write('  14');
+  write(',vtm,*n');
+
+  write('    ');
+  if (acc_active)
+    write(',its,');
+  else
+    write(',ita,');
+  write('14*n');
+
   acc_active = 1;
+  is_lvalue = 1;
 }
 
 gen_param(offset) {
-  /* read function parameter */
-  extrn acc_active;
+  /* get address of function parameter */
+  extrn acc_active, is_lvalue;
 
   write('   6');
-  if (acc_active)
-    write(',xts,');
-  else
-    write(',xta,');
+  write(',utc,');
   number(offset);
   write('*n');
+
+  write('  14');
+  write(',vtm,*n');
+
+  write('    ');
+  if (acc_active)
+    write(',its,');
+  else
+    write(',ita,');
+  write('14*n');
+
   acc_active = 1;
+  is_lvalue = 1;
 }
 
 gen_assign() {
@@ -1009,8 +1027,8 @@ gen_rvalue() {
   extrn is_lvalue;
 
   if (is_lvalue) {
-    write('  14');
-    write(',ati,*n');
+    write('    ');
+    write(',ati,14*n');
     write('  14');
     write(',xta,*n');
     is_lvalue = 0;
