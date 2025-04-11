@@ -287,7 +287,7 @@ mapch(c) {
 }
 
 expr(lev) {
-  extrn peeksym, csym, cval, isn, retflag;
+  extrn peeksym, csym, cval, isn, retflag, is_lvalue;
   auto o, narg;
 
   retflag = 0;
@@ -336,6 +336,7 @@ case21:
       write('    ');
       write(',its,');
       write('14*n');
+      is_lvalue = 1;
     }
     goto loop;
   }
@@ -386,8 +387,9 @@ loop:
   o = symbol();
 
   if (lev >= 14 & o == 80) { /* = */
+    assert_lvalue();
     expr(14);
-    gen_helper('asg'); /* asg */
+    gen_assign();
     goto loop;
   }
   if (lev >= 10 & o == 48) { /* | ^ */
@@ -479,6 +481,7 @@ loop:
       peeksym = o;
       while (o != 7) { /* not ) */
         expr(15);
+        gen_rvalue();
         o = symbol();
         if (o != 7 & o != 9) { /* not ) or , */
           error("Bad function argument");
@@ -577,7 +580,7 @@ extdef() {
     if (symbol() != 21) /* number */
       goto syntax;
     write('    ');
-    write(',oct,');
+    write(',log,');
     printo(-cval);
     write('*n');
     gen_epilog();
@@ -586,7 +589,7 @@ extdef() {
 
   if (o == 21) { /* number */
     write('    ');
-    write(',oct,');
+    write(',log,');
     printo(cval);
     write('*n');
     gen_epilog();
@@ -595,7 +598,7 @@ extdef() {
 
   if (o == 1) { /* ; */
     write('    ');
-    write(',oct,');
+    write(',log,');
     write('*n');
     gen_epilog();
     return;
@@ -618,7 +621,7 @@ extdef() {
         cval = -cval;
       }
       write('    ');
-      write(',oct,');
+      write(',log,');
       printo(cval);
       write('*n');
       c = c-1;
@@ -875,8 +878,8 @@ gen_bsave() {
   write('    ');
   write(',its,13');
   write('*n');
-  write('  13');
-  write(',vjm,b/');
+  write('    ');
+  write(',call,b/');
   if (nparam == 0)
     write('save0*n');
   else
@@ -960,8 +963,8 @@ gen_goto() {
 
 gen_helper(name) {
   /* call helper routine */
-  write('  13');
-  write(',vjm,b/');
+  write('    ');
+  write(',call,b/');
   write(name);
   write('*n');
 }
@@ -992,6 +995,26 @@ gen_param(offset) {
   number(offset);
   write('*n');
   acc_active = 1;
+}
+
+gen_assign() {
+  write('  15');
+  write(',wtc,*n');
+  write('    ');
+  write(',atx,*n');
+}
+
+gen_rvalue() {
+  /* when accumulator contains lvalue - fetch rvalue */
+  extrn is_lvalue;
+
+  if (is_lvalue) {
+    write('  14');
+    write(',ati,*n');
+    write('  14');
+    write(',xta,*n');
+    is_lvalue = 0;
+  }
 }
 
 jumpc(n) {

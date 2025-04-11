@@ -8,7 +8,7 @@ TEST_F(besm6, global_var)
         foo;
     )");
     EXPECT_EQ(output, R"( foo:,name,
-    ,oct,
+    ,log,
     ,end,
 )");
 }
@@ -25,7 +25,7 @@ TEST_F(besm6, empty_program)
  b/save0:,subp,
  b/ret:,subp,
     ,its,13
-  13,vjm,b/save0
+    ,call,b/save0
     ,uj, b/ret
     ,end,
 )");
@@ -43,7 +43,7 @@ TEST_F(besm6, hello_write)
  b/save0:,subp,
  b/ret:,subp,
     ,its,13
-  13,vjm,b/save0
+    ,call,b/save0
  write:,subp,
   14,vtm,write
     ,ita,14
