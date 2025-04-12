@@ -1,0 +1,28 @@
+     b/mod: ,name,
+c
+c Calculate the remainder of the division of two integers.
+c Pop two values from stack.
+c Push result back.
+c
+c   result = a % b
+c
+c Value a is in stack, value b on accumulator.
+c
+            ,ntr,
+            ,aox, =:64
+            ,avx,                   . B
+         15 ,stx,
+            ,aox, =:64
+            ,avx,                   . A
+         15 ,atx, 2                 . store A
+         15 ,a/x, 1                 . divide by B
+            ,ntr, 3
+            ,a+x, =:64
+            ,ntr,
+         15 ,a*x, 1                 . multiply by B
+         15 ,x-a, 2                 . subtract from A
+            ,ntr, 3
+            ,a+x, =:64
+            ,aax, =37 7777 7777 7777
+         13 ,uj,
+            ,end,
