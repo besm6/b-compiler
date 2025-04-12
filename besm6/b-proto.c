@@ -440,7 +440,7 @@ case21:
     } else { /* internal */
       write(' 14,');
       write('vtm,');
-      write('l*');
+      write('/');
       number(csym[1]);
       write('\n');
       write('   ,');
@@ -1039,21 +1039,20 @@ void gen_param(int offset) {
 void jumpc(int n) {
   write('   ,'); /* ifop */
   write('uza,');
-  write('l*');
+  write('/');
   number(n);
   write('\n');
 }
 
 void jump(int n) {
   write('   ,');
-  write('uj, ');
-  write('l*');
+  write('uj,/');
   number(n);
   write('\n');
 }
 
 void label(int n) {
-  write(' l*');
+  write(' /');
   number(n);
   write(':,bs');
   write('s,\n');

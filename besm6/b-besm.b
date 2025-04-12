@@ -904,8 +904,7 @@ gen_intern(n) {
   extrn acc_active, is_lvalue;
 
   write('  14');
-  write(',vtm,');
-  write('l**');
+  write(',vtm,/');
   number(n);
   write('*n');
 
@@ -1126,20 +1125,20 @@ gen_string() {
 
 jumpc(n) {
   write('    '); /* ifop */
-  write(',uza,l**');
+  write(',uza,/');
   number(n);
   write('*n');
 }
 
 jump(n) {
   write('    ');
-  write(',uj,l**');
+  write(',uj,/');
   number(n);
   write('*n');
 }
 
 label(n) {
-  write(' l**');
+  write(' /');
   number(n);
   write(':,bss,');
   write('*n');
