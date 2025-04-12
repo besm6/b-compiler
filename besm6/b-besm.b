@@ -557,6 +557,7 @@ extdef() {
 
   if (o == 2 | o == 6) { /* { ( */
     gen_prolog();
+    gen_entry();
     nauto = 0;
     nparam = 0;
     if (o == 6) { /* ( */
@@ -805,6 +806,10 @@ gen_prolog() {
   write(' ');
   name(&csym[2]);
   write(':,name,*n');
+}
+
+gen_entry() {
+  extrn csym;
 
   if (csym[2] == 'm' & csym[3] == 'a' & csym[4] == 'i' & csym[5] == 'n' & csym[6] == 0) {
     write(' prog');
@@ -812,6 +817,11 @@ gen_prolog() {
     write(',entry,');
     write('*n');
   }
+
+  /* for recursive calls */
+  write(' ');
+  name(&csym[2]);
+  write(':,bss,*n');
 }
 
 gen_epilog() {

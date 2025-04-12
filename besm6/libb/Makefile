@@ -1,5 +1,5 @@
-B_SOURCES =
-# TODO: printn.b printf.b
+B_SOURCES = printd.b
+# TODO: printo.b printf.b
 
 B_ASM = $(patsubst %.b,%.madlen,$(B_SOURCES))
 

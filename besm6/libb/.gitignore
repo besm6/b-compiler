@@ -1,4 +1,5 @@
 *.dub
 *.bin
 printf.madlen
-printn.madlen
+printd.madlen
+printo.madlen
