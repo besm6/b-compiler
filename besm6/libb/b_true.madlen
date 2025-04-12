@@ -1,0 +1,6 @@
+    b/true: ,name,
+c
+c Constant 1, as logical 'true' value.
+c
+            ,log, 1
+            ,end,

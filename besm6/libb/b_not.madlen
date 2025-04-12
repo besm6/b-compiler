@@ -1,0 +1,13 @@
+     b/not: ,name,
+c
+c Compute logical NOT operation.
+c
+    b/true: ,subp,
+            ,aex,
+            ,uza, true
+            ,xta,
+         13 ,uj,
+c
+      true: ,xta, b/true
+         13 ,uj,
+            ,end,

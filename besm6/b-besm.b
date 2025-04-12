@@ -344,7 +344,7 @@ case21:
   if (o == 34) { /* ! */
     expr(1);
     gen_rvalue();
-    gen_helper('unot'); /* unot */
+    gen_helper('not'); /* logical not */
     goto loop;
   }
 
