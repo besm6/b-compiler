@@ -479,21 +479,21 @@ loop:
     gen_rvalue();
     expr(2);
     gen_rvalue();
-    gen_helper('bmul'); /* bmul */
+    gen_helper('mul'); /* multiply */
     goto loop;
   }
   if (lev >= 3 & o == 43) { /* / */
     gen_rvalue();
     expr(2);
     gen_rvalue();
-    gen_helper('bdiv'); /* bdiv */
+    gen_helper('div'); /* divide */
     goto loop;
   }
   if (lev >= 3 & o == 44) { /* % */
     gen_rvalue();
     expr(2);
     gen_rvalue();
-    gen_helper('bmod'); /* bmod */
+    gen_helper('mod'); /* modulo */
     goto loop;
   }
   if (o == 4) { /* [ */

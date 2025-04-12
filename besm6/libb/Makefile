@@ -9,6 +9,7 @@ ASM_SOURCES = \
         b_gt.madlen \
         b_le.madlen \
         b_lt.madlen \
+        b_mul.madlen \
         b_ne.madlen \
         b_not.madlen \
         b_ret.madlen \

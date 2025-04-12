@@ -209,6 +209,20 @@ True
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, binary_multiply)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            writeb(2 * 3 + '0');
+            writeb(3 * 3 + '0');
+            writeb('*n');
+        }
+    )");
+    const std::string expect = "69\n";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, DISABLED_unary_operators)
 {
     auto output = compile_and_run(R"(
