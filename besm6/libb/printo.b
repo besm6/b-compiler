@@ -5,7 +5,7 @@ printo(n) {
         writeb('-');
         n = -n;
     }
-    if ((a = n >> 3)) {
+    if ((a = n / 8)) {
         printo(a);
     }
     writeb((n & 7) + '0');

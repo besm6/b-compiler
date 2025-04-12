@@ -45,16 +45,34 @@ TEST_F(besm6, libb_write)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_printd)
+TEST_F(besm6, libb_printd)
 {
     auto output = compile_and_run(R"(
         main() {
             printd(12345);
+            flush();
             printd(-56789);
+            flush();
         }
     )");
     const std::string expect = R"(12345
 -56789
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, libb_printo)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printo(012345);
+            flush();
+            printo(-034567);
+            flush();
+        }
+    )");
+    const std::string expect = R"(12345
+-34567
 )";
     EXPECT_EQ(output, expect);
 }
