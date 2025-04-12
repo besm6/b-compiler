@@ -38,5 +38,7 @@ add_executable(btest EXCLUDE_FROM_ALL
     assignment_test.cpp
     expr_test.cpp
     func_test.cpp
+    string_test.cpp
+    precedence_test.cpp
 )
 gtest_discover_tests(btest EXTRA_ARGS --gtest_repeat=1 PROPERTIES TIMEOUT 120)

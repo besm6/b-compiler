@@ -399,25 +399,55 @@ assign global 42
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, local_array)
+TEST_F(besm6, global_scalars)
 {
     auto output = compile_and_run(R"(
-        main() {
-            auto l 3;
+        a;
+        b 123;
+        c 'foo';
 
-            l = &l + 1;
-            l[0] = 123;
-            l[1] = 'local';
-            l[2] = "string";
-            printf("local = %d, '%c', *"%s*"*n", l[0], l[1], l[2]);
+        main() {
+            extrn a, b, c;
+
+            printf("a = %d*n", a);
+            printf("b = %d*n", b);
+            printf("c = '%c'*n", c);
         }
     )");
-    const std::string expect = R"(local = 123, 'local', "string"
+    const std::string expect = R"(a = 0
+b = 123
+c = 'foo'
 )";
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, global_array)
+TEST_F(besm6, local_vector)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            auto a;
+            auto b 3;
+            auto c;
+
+            b = &b + 1;
+            b[0] = 123;
+            b[1] = 'local';
+            b[2] = "string";
+            printf("local b = %d, '%c', *"%s*"*n", b[0], b[1], b[2]);
+            printf("offset a = %d*n", &a - &a);
+            printf("offset b = %d*n", &b - &a);
+            printf("offset c = %d*n", &c - &a);
+        }
+    )");
+    const std::string expect = R"(local b = 123, 'local', "string"
+offset a = 0
+offset b = 1
+offset c = 5
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, global_vector)
 {
     auto output = compile_and_run(R"(
         g[3] 123, -345, 'foo';
