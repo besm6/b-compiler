@@ -63,6 +63,58 @@ TEST_F(besm6, unary_logical_not)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, relational_less_than)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            if (2 < 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 < 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 < 2)
+                write('True*n');
+            else
+                write('False*n');
+        }
+    )");
+    const std::string expect = R"(True
+False
+False
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, relational_less_or_equal)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            if (2 <= 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 <= 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 <= 2)
+                write('True*n');
+            else
+                write('False*n');
+        }
+    )");
+    const std::string expect = R"(True
+True
+False
+)";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, DISABLED_unary_operators)
 {
     auto output = compile_and_run(R"(

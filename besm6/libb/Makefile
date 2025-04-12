@@ -4,6 +4,8 @@ B_SOURCES = printd.b
 B_ASM = $(patsubst %.b,%.madlen,$(B_SOURCES))
 
 ASM_SOURCES = \
+        b_le.madlen \
+        b_lt.madlen \
         b_not.madlen \
         b_ret.madlen \
         b_save0.madlen \

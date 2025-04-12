@@ -433,14 +433,14 @@ loop:
     gen_rvalue();
     expr(5);
     gen_rvalue();
-    gen_helper('ble'); /* ble */
+    gen_helper('le'); /* relational less or equal */
     goto loop;
   }
   if (lev >= 6 & o == 63) { /* < */
     gen_rvalue();
     expr(5);
     gen_rvalue();
-    gen_helper('blt'); /* blt */
+    gen_helper('lt'); /* relational less than */
     goto loop;
   }
   if (lev >= 6 & o == 64) { /* >= */
