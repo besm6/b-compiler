@@ -223,6 +223,20 @@ TEST_F(besm6, binary_multiply)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, binary_divide)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            writeb(18 / 3 + '0');
+            writeb(207 / 23 + '0');
+            writeb('*n');
+        }
+    )");
+    const std::string expect = "69\n";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, DISABLED_unary_operators)
 {
     auto output = compile_and_run(R"(

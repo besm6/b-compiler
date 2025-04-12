@@ -1,0 +1,22 @@
+     b/div: ,name,
+c
+c Divide two integers.
+c Pop two values from stack.
+c Push result back.
+c
+c   result = a / b
+c
+c Value a is in stack, value b on accumulator.
+c
+            ,ntr,
+            ,aox, =:64
+            ,avx,
+         15 ,stx,
+            ,aox, =:64
+            ,avx,
+         15 ,a/x, 1
+            ,ntr, 3
+            ,a+x, =:64
+            ,aax, =37 7777 7777 7777
+         13 ,uj,
+            ,end,

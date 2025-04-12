@@ -19,6 +19,7 @@ tmp
 *.nm
 *.trace
 *.b-
+*.madlen-
 *.lst
 *.obj
 TODO
