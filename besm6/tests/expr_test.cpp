@@ -319,7 +319,7 @@ while (!x) x = 0
 }
 
 //
-// Operators ++ and -- are not supported by PDP-7 version of B compiler
+// Operators ++ and -- are not supported by PDP-7 version of B compiler.
 //
 TEST_F(besm6, DISABLED_postfix_increment_decrement)
 {
