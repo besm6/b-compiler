@@ -5,7 +5,7 @@ printf(fmt, args) {
     ap = &args;
 loop:
     while ((c = char(fmt, i)) != '%') {
-        if (c == '*e')
+        if (c == '*0')
             return;
         writeb(c);
         i = i + 1;
@@ -26,7 +26,7 @@ loop:
         write(a);
     } else if (c == 's') {
         n = 0;
-        while ((c = char(a, n)) != '*e') {
+        while ((c = char(a, n)) != '*0') {
             writeb(c);
             n = n + 1;
         }
