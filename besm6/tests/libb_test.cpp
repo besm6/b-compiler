@@ -28,7 +28,7 @@ TEST_F(besm6, libb_okno)
             OKHO();
         }
     )");
-    const std::string expect = "0000000000001052          004   00000 00000 00000 00000 00000 53402 53405 00000 00000 00000 00000 00000 01004 01052 53405\n";
+    const std::string expect = "0000000000001052          007   00000 00000 00000 00000 00000 53402 53405 00000 00000 00000 00000 00000 01004 01052 53405\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -42,6 +42,20 @@ TEST_F(besm6, libb_write)
         }
     )");
     const std::string expect = "Hello, World!\n";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, DISABLED_libb_printd)
+{
+    auto output = compile_and_run(R"(
+        main() {
+            printd(12345);
+            printd(-56789);
+        }
+    )");
+    const std::string expect = R"(12345
+-56789
+)";
     EXPECT_EQ(output, expect);
 }
 

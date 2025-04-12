@@ -343,6 +343,7 @@ case21:
 
   if (o == 34) { /* ! */
     expr(1);
+    gen_rvalue();
     gen_helper('unot'); /* unot */
     goto loop;
   }
@@ -351,11 +352,13 @@ case21:
     peeksym = symbol();
     if (peeksym == 21) { /* number */
       peeksym = -1;
-      cval = -cval;
+      cval = -cval & 037777777777777; /* mantissa and sign, 41 bits */
       goto case21;
     }
     expr(1);
-    gen_helper('umin'); /* umin */
+    gen_rvalue();
+    write('    ');
+    write(',x-a,*n');
     goto loop;
   }
 
@@ -368,6 +371,7 @@ case21:
 
   if (o == 42) { /* * */
     expr(1);
+    gen_rvalue();
     write('   '); /* uind */
     write(',ati,');
     write('14*n');
@@ -394,86 +398,118 @@ loop:
     goto loop;
   }
   if (lev >= 10 & o == 48) { /* | ^ */
+    gen_rvalue();
     expr(9);
+    gen_rvalue();
     write('  15');
     write(',aox,');
     write('*n');
     goto loop;
   }
   if (lev >= 8 & o == 47) { /* & */
+    gen_rvalue();
     expr(7);
+    gen_rvalue();
     write('  15');
     write(',aax,');
     write('*n');
     goto loop;
   }
   if (lev >= 7 & o == 60) { /* == */
+    gen_rvalue();
     expr(6);
+    gen_rvalue();
     gen_helper('beq'); /* beq */
     goto loop;
   }
   if (lev >= 7 & o == 61) { /* != */
+    gen_rvalue();
     expr(6);
+    gen_rvalue();
     gen_helper('bne'); /* bne */
     goto loop;
   }
   if (lev >= 6 & o == 62) { /* <= */
+    gen_rvalue();
     expr(5);
+    gen_rvalue();
     gen_helper('ble'); /* ble */
     goto loop;
   }
   if (lev >= 6 & o == 63) { /* < */
+    gen_rvalue();
     expr(5);
+    gen_rvalue();
     gen_helper('blt'); /* blt */
     goto loop;
   }
   if (lev >= 6 & o == 64) { /* >= */
+    gen_rvalue();
     expr(5);
+    gen_rvalue();
     gen_helper('bge'); /* bge */
     goto loop;
   }
   if (lev >= 6 & o == 65) { /* > */
+    gen_rvalue();
     expr(5);
+    gen_rvalue();
     gen_helper('bgt'); /* bgt */
     goto loop;
   }
   if (lev >= 4 & o == 40) { /* + */
+    gen_rvalue();
     expr(3);
+    gen_rvalue();
     write('  15');
     write(',a+x,');
     write('*n');
     goto loop;
   }
   if (lev >= 4 & o == 41) { /* - */
+    gen_rvalue();
     expr(3);
+    gen_rvalue();
     write('  15');
     write(',x-a,');
     write('*n');
     goto loop;
   }
   if (lev >= 3 & o == 42) { /* * */
+    gen_rvalue();
     expr(2);
+    gen_rvalue();
     gen_helper('bmul'); /* bmul */
     goto loop;
   }
   if (lev >= 3 & o == 43) { /* / */
+    gen_rvalue();
     expr(2);
+    gen_rvalue();
     gen_helper('bdiv'); /* bdiv */
     goto loop;
   }
   if (lev >= 3 & o == 44) { /* % */
+    gen_rvalue();
     expr(2);
+    gen_rvalue();
     gen_helper('bmod'); /* bmod */
     goto loop;
   }
   if (o == 4) { /* [ */
+    assert_lvalue();
     expr(15);
+    gen_rvalue();
     if (symbol() != 5)
       error("Bad array index");
-    gen_helper('vect'); /* vector */
+    write('  15');
+    write(',arx,');
+    write('*n');
+    is_lvalue = 1;
     goto loop;
   }
   if (o == 6) { /* ( */
+    assert_lvalue();
     o = symbol();
     if (o == 7) /* ) */
       gen_mcall();
