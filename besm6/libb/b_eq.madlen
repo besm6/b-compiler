@@ -1,0 +1,15 @@
+      b/eq: ,name,
+c
+c Compute relational Equal operation.
+c Pop two values from stack.
+c Push result back.
+c
+    b/true: ,subp,
+         15 ,aex,
+            ,uza, true
+            ,xta,
+         13 ,uj,
+c
+      true: ,xta, b/true
+         13 ,uj,
+            ,end,

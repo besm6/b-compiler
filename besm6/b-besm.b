@@ -419,14 +419,14 @@ loop:
     gen_rvalue();
     expr(6);
     gen_rvalue();
-    gen_helper('beq'); /* beq */
+    gen_helper('eq'); /* relational equal */
     goto loop;
   }
   if (lev >= 7 & o == 61) { /* != */
     gen_rvalue();
     expr(6);
     gen_rvalue();
-    gen_helper('bne'); /* bne */
+    gen_helper('ne'); /* relational not equal */
     goto loop;
   }
   if (lev >= 6 & o == 62) { /* <= */
