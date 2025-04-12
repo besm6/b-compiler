@@ -77,7 +77,7 @@ TEST_F(besm6, libb_printo)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_printf)
+TEST_F(besm6, libb_printf)
 {
     auto output = compile_and_run(R"(
         main() {
