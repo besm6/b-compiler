@@ -352,7 +352,7 @@ case21:
     peeksym = symbol();
     if (peeksym == 21) { /* number */
       peeksym = -1;
-      cval = -cval & 037777777777777; /* mantissa and sign, 41 bits */
+      cval = negate(cval);
       goto case21;
     }
     expr(1);
@@ -657,7 +657,7 @@ extdef() {
         if (symbol() != 21) {
           goto syntax;
         }
-        cval = -cval;
+        cval = negate(cval);
       }
       write('    ');
       write(',log,');
@@ -810,6 +810,11 @@ semi:
 syntax:
   error("Bad statement syntax");
   goto next;
+}
+
+negate(n) {
+  /* mantissa and sign, 41 bits */
+  return (-n & 037777777777777);
 }
 
 blkend() {

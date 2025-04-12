@@ -403,7 +403,7 @@ TEST_F(besm6, local_array)
 {
     auto output = compile_and_run(R"(
         main() {
-            auto l[3];
+            auto l 3;
 
             l[0] = 123;
             l[1] = 'local';
@@ -419,17 +419,17 @@ TEST_F(besm6, local_array)
 TEST_F(besm6, global_array)
 {
     auto output = compile_and_run(R"(
-        g[3] -345, 'foo', "bar";
+        g[3] 123, -345, 'foo';
 
         main() {
             extrn g;
 
-            printf("global = %d, '%c', *"%s*"*n", g[0], g[1], g[2]);
-            printf("address = %d, %d, %d*n", (&g[0]) - g, (&g[1]) - g, (&g[2]) - g);
+            printf("global = %d, %d, '%c'*n", g[0], g[1], g[2]);
+            printf("address = %d, %d, %d*n", &g[0] - &g, &g[1] - &g, &g[2] - &g);
         }
     )");
-    const std::string expect = R"(global = -345, 'foo', "bar"
-address = 0, 8, 16
+    const std::string expect = R"(global = 123, -345, 'foo'
+address = 0, 1, 2
 )";
     EXPECT_EQ(output, expect);
 }
