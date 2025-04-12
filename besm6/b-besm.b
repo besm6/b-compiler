@@ -447,14 +447,14 @@ loop:
     gen_rvalue();
     expr(5);
     gen_rvalue();
-    gen_helper('bge'); /* bge */
+    gen_helper('ge'); /* relational greater or equal */
     goto loop;
   }
   if (lev >= 6 & o == 65) { /* > */
     gen_rvalue();
     expr(5);
     gen_rvalue();
-    gen_helper('bgt'); /* bgt */
+    gen_helper('gt'); /* relational greater than */
     goto loop;
   }
   if (lev >= 4 & o == 40) { /* + */

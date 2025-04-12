@@ -115,6 +115,58 @@ False
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, relational_greater_than)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            if (2 > 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 > 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 > 2)
+                write('True*n');
+            else
+                write('False*n');
+        }
+    )");
+    const std::string expect = R"(False
+False
+True
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, relational_greater_or_equal)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            if (2 >= 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 >= 3)
+                write('True*n');
+            else
+                write('False*n');
+            if (3 >= 2)
+                write('True*n');
+            else
+                write('False*n');
+        }
+    )");
+    const std::string expect = R"(False
+True
+True
+)";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, DISABLED_unary_operators)
 {
     auto output = compile_and_run(R"(
