@@ -99,7 +99,7 @@ format %s: "Hello" "World"
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_exit)
+TEST_F(besm6, libb_exit)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -148,15 +148,4 @@ TEST_F(besm6, libb_lchar)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_libb_nwrite)
-{
-    auto output = compile_and_run(R"(
-        main() {
-            nwrite(1, "foobar*n", 7);
-        }
-    )");
-    const std::string expect = "foobar\n";
-    EXPECT_EQ(output, expect);
-}
-
-//TODO: read nread
+//TODO: read

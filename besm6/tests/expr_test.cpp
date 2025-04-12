@@ -237,7 +237,7 @@ TEST_F(besm6, binary_divide)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_unary_operators)
+TEST_F(besm6, unary_operators)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -271,7 +271,7 @@ local *y = 42, expect 42
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_negation_in_conditional_context)
+TEST_F(besm6, negation_in_conditional_context)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -318,7 +318,10 @@ while (!x) x = 0
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_postfix_operators)
+//
+// Operators ++ and -- are not supported by PDP-7 version of B compiler
+//
+TEST_F(besm6, DISABLED_postfix_increment_decrement)
 {
     auto output = compile_and_run(R"(
         incr(x) {
@@ -341,33 +344,12 @@ TEST_F(besm6, DISABLED_postfix_operators)
             return (a - b);
         }
 
-        assign_local(x) {
-            auto result;
-            printf("assign local %d*n", x);
-            result = x;
-            return (result);
-        }
-
-        assign_global(x) {
-            extrn g;
-
-            printf("assign global %d*n", x);
-            g = x;
-        }
-
         main() {
-            extrn g;
-
             printf("%d*n", incr(42));
             printf("%d*n", add(42, 123));
             printf("%d*n", decr(42));
             printf("%d*n", sub(42, 123));
-            printf("%d*n", assign_local(42));
-            assign_global(42);
-            printf("%d*n", g);
         }
-
-        g;
     )");
     const std::string expect = R"(increment 42
 43
@@ -377,7 +359,39 @@ decrement 42
 41
 subtract 42 - 123
 -81
-assign local 42
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, assign_operators)
+{
+    auto output = compile_and_run(R"(
+        asg_local(x) {
+            auto result;
+
+            printf("assign local %d*n", x);
+            result = x;
+            return (result);
+        }
+
+        asg_global(x) {
+            extrn g;
+
+            printf("assign global %d*n", x);
+            g = x;
+        }
+
+        main() {
+            extrn g;
+
+            printf("%d*n", asg_local(42));
+            asg_global(42);
+            printf("%d*n", g);
+        }
+
+        g;
+    )");
+    const std::string expect = R"(assign local 42
 42
 assign global 42
 42
@@ -385,7 +399,7 @@ assign global 42
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_local_array)
+TEST_F(besm6, local_array)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -402,7 +416,7 @@ TEST_F(besm6, DISABLED_local_array)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_global_array)
+TEST_F(besm6, global_array)
 {
     auto output = compile_and_run(R"(
         g[3] -345, 'foo', "bar";
@@ -420,7 +434,7 @@ address = 0, 8, 16
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_local_mix)
+TEST_F(besm6, local_mix)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -448,7 +462,7 @@ TEST_F(besm6, DISABLED_local_mix)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_binary_operators)
+TEST_F(besm6, binary_operators)
 {
     auto output = compile_and_run(R"(
         x 42;
@@ -528,7 +542,7 @@ TEST_F(besm6, DISABLED_binary_operators)
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, DISABLED_eq_by_bitmask)
+TEST_F(besm6, eq_by_bitmask)
 {
     auto output = compile_and_run(R"(
 
@@ -546,7 +560,7 @@ TEST_F(besm6, DISABLED_eq_by_bitmask)
     EXPECT_EQ(output, "Small positive: 51\n");
 }
 
-TEST_F(besm6, DISABLED_octal_literals)
+TEST_F(besm6, octal_literals)
 {
     auto output = compile_and_run(R"(
 
