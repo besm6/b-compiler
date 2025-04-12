@@ -19,6 +19,28 @@ TEST_F(besm6, unary_negate)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, if_else)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            auto v;
+            v = 123;
+            if (v)
+                write('Yes*n');
+            else
+                write('No*n');
+            v = 0;
+            if (v)
+                write('Yes*n');
+            else
+                write('No*n');
+        }
+    )");
+    const std::string expect = "Yes\nNo\n";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, DISABLED_unary_operators)
 {
     auto output = compile_and_run(R"(

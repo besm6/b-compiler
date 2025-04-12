@@ -528,6 +528,7 @@ loop:
       }
       gen_call(narg);
     }
+    is_lvalue = 0;
     goto loop;
   }
 
@@ -741,6 +742,7 @@ next:
 
     if (cval == 12) { /* if */
       pexpr();
+      gen_rvalue();
       o1 = isn;
       isn = isn+1;
       jumpc(o1);
@@ -765,6 +767,7 @@ next:
       isn = isn+1;
       label(o1);
       pexpr();
+      gen_rvalue();
       o2 = isn;
       isn = isn+1;
       jumpc(o2);
@@ -796,6 +799,7 @@ next:
 
   peeksym = o;
   expr(15);
+  gen_rvalue();
 
 semi:
   o = symbol();
@@ -960,6 +964,7 @@ gen_bsave() {
 
 gen_bret() {
   /* call b/ret */
+  gen_rvalue();
   write('    ');
   write(',uj, b/');
   write('ret*n');
