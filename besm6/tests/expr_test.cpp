@@ -405,6 +405,7 @@ TEST_F(besm6, local_array)
         main() {
             auto l 3;
 
+            l = &l + 1;
             l[0] = 123;
             l[1] = 'local';
             l[2] = "string";
@@ -429,35 +430,35 @@ TEST_F(besm6, global_array)
         }
     )");
     const std::string expect = R"(global = 123, -345, 'foo'
-address = 0, 1, 2
+address = 1, 2, 3
 )";
     EXPECT_EQ(output, expect);
 }
 
-TEST_F(besm6, local_mix)
+TEST_F(besm6, local_allocation)
 {
     auto output = compile_and_run(R"(
         main() {
-            auto e, d;
-            auto c[1];
-            auto b, a;
             auto p;
+            auto a, b;
+            auto c 1;
+            auto d, e;
 
+            p = &a;
             a = 11;
             b = 22;
+            c = &c + 1;
             c[0] = 33;
             d = 44;
             e = 55;
-
-            printf("%d %d %d %d", a, b, c - &c, c[0]);
-            printf(" %d %d*n", d, e);
-            p = &a;
-            printf("%d %d %d %d", p[0], p[1], p[2] - &c, p[3]);
-            printf(" %d %d*n", p[4], p[5]);
+            printf("%d %d %d %d %d*n", &a - &p, &b - &p, &c - &p, &d - &p, &e - &p);
+            printf("%d %d %d %d %d %d*n", a, b, c - &c, c[0], d, e);
+            printf("%d %d %d %d %d %d*n", p[0], p[1], p[2] - &c, p[3], p[4], p[5]);
         }
     )");
-    const std::string expect = R"(11 22 8 33 44 55
-11 22 8 33 44 55
+    const std::string expect = R"(1 2 3 5 6
+11 22 1 33 44 55
+11 22 1 33 44 55
 )";
     EXPECT_EQ(output, expect);
 }

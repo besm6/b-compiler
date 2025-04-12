@@ -498,7 +498,7 @@ loop:
     goto loop;
   }
   if (o == 4) { /* [ */
-    assert_lvalue();
+    gen_rvalue();
     expr(15);
     gen_rvalue();
     if (symbol() != 5)
@@ -652,6 +652,10 @@ extdef() {
     if ((o = symbol()) == 1) /* ; */
       goto done;
     gen_prolog();
+    write('    ');
+    write(',,*n');
+    write('    ');
+    write(',,**+1*n');
     while (o == 21 | o == 41) { /* number - */
       if (o == 41) { /* - */
         if (symbol() != 21) {
