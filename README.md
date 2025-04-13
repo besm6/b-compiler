@@ -1,21 +1,18 @@
 # B compiler for BESM6
 
-This project has an objective to create a B compiler for BESM-6 architecture.
-We start with existing B compiler for PDP-7 and modify it for BESM-6.
+Here you can find a B compiler for BESM-6 machine.
 
-The calling conventions are similar to Fortran, but arguments are passed
-by value rather than by address:
+## Documentation
 
-    result = foobar(a, b, c)
+ * [Calling conventions](doc/Besm6-Calling-Conventions.md) for BESM-6
+ * [User's Reference to B](doc/kbman.pdf) by K. Thompson
+ * [A Tutorial Introduction to The Language B](doc/btut.pdf) by B. W. Kernighan
+ * [Users’ Reference to B on MH-TSS](doc/bref.pdf) by S. C. Johnson
+ * [The Development of the C Language](doc/chistory.pdf) by Dennis M. Ritchie
 
-In Madlen it looks like this:
+## Build
 
-       ,xta, a
-       ,xts, b
-       ,xts, c
-    14 ,vtm, -3
-    13 ,vjm, foobar
-       ,atx, result
+To build this software, the following packages should be pre-installed:
 
-Note that the number of arguments (negated) is passed in register 14.
-This is needed for functions with a variable number of arguments.
+ * dubna
+ * besmc

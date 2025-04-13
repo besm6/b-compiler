@@ -649,13 +649,14 @@ extdef() {
     }
     if (o != 5) /* ] */
       goto syntax;
-    if ((o = symbol()) == 1) /* ; */
-      goto done;
     gen_prolog();
     write('    ');
-    write(',,*n');
+    write(',z00,*n');
     write('    ');
-    write(',,**+1*n');
+    write(',z00,');
+    write('**+1*n');
+    if ((o = symbol()) == 1) /* ; */
+      goto done;
     while (o == 21 | o == 41) { /* number - */
       if (o == 41) { /* - */
         if (symbol() != 21) {

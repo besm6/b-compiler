@@ -10,15 +10,17 @@ main() {
     extrn n;
     auto i;
 
-    while(i++ < n) {
-        if(0 == i % 15)
-            write('FizzBuzz');
-        else if(0 == i % 3)
+    while (i < n) {
+        i = i + 1;
+        if (0 == i % 15) {
             write('Fizz');
-        else if(0 == i % 5)
+            write('Buzz');
+        } else if (0 == i % 3)
+            write('Fizz');
+        else if (0 == i % 5)
             write('Buzz');
         else
-            printnb(i, 10);
+            printf("%d", i);
         write('*n');
     }
 }
