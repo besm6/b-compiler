@@ -628,7 +628,7 @@ extdef() {
   o = symbol();
 
   if (o == 2 | o == 6) { /* { ( */
-    gen_prolog();
+    gen_prolog(1);
     gen_entry();
     nauto = 0;
     nparam = 0;
@@ -655,9 +655,9 @@ extdef() {
       if (symbol() != 21) { /* number */
         goto syntax;
       }
-      cval = -cval;
+      cval = negate(cval);
     }
-    gen_prolog();
+    gen_prolog(0);
     write('    ');
     write(',log,');
     printo(cval);
@@ -667,7 +667,7 @@ extdef() {
   }
 
   if (o == 1) { /* ; */
-    gen_prolog();
+    gen_prolog(0);
     write('    ');
     write(',bss,1');
     write('*n');
@@ -683,7 +683,7 @@ extdef() {
     }
     if (o != 5) /* ] */
       goto syntax;
-    gen_prolog();
+    gen_prolog(0);
     write('    ');
     write(',z00,*n');
     write('    ');
@@ -884,14 +884,19 @@ assert_lvalue() {
   }
 }
 
-gen_prolog() {
+gen_prolog(based) {
   /* start Madlen module */
   extrn csym;
 
   write(' ');
   name(&csym[2]);
-  write(':,name');
-  write(',*n');
+  write(':');
+  if (based) {
+    /* globally based by registers 8,9,10 */
+    write('8');
+  }
+  write(',name,');
+  write('*n');
 }
 
 gen_entry() {

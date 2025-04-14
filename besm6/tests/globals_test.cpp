@@ -20,7 +20,7 @@ TEST_F(besm6, empty_program)
             /* empty */
         }
     )");
-    EXPECT_EQ(output, R"( main:,name,
+    EXPECT_EQ(output, R"( main:8,name,
  program:,entry,
  main:,bss,
  b/save0:,subp,
@@ -39,7 +39,7 @@ TEST_F(besm6, hello_write)
             write('Hello*n');
         }
     )");
-    EXPECT_EQ(output, R"( main:,name,
+    EXPECT_EQ(output, R"( main:8,name,
  program:,entry,
  main:,bss,
  b/save0:,subp,

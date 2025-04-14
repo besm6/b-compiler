@@ -1,4 +1,4 @@
-     b/mul: ,name,
+   b/mul: 8 ,name,
 c
 c Multiply two integers.
 c Pop two values from stack.

@@ -1,4 +1,4 @@
-     write: ,name,
+   write: 8 ,name,
 c
 c Append a multi-char to the stdout buffer.
 c
