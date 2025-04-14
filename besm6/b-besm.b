@@ -468,28 +468,16 @@ loop:
   }
   if (lev >= 5 & o == 66) { /* << */
     gen_rvalue();
-    peeksym = symbol();
-    if (peeksym == 21) { /* number */
-      peeksym = -1;
-      gen_lshift(cval); /* shift left by constant */
-    } else {
-      expr(5);
-      gen_rvalue();
-      gen_lshacc(); /* shift left by accumulator */
-    }
+    expr(4);
+    gen_rvalue();
+    gen_lshacc(); /* shift left by accumulator */
     goto loop;
   }
   if (lev >= 5 & o == 67) { /* >> */
     gen_rvalue();
-    peeksym = symbol();
-    if (peeksym == 21) { /* number */
-      peeksym = -1;
-      gen_rshift(cval); /* shift right by constant */
-    } else {
-      expr(5);
-      gen_rvalue();
-      gen_rshacc(); /* shift right by accumulator */
-    }
+    expr(4);
+    gen_rvalue();
+    gen_rshacc(); /* shift right by accumulator */
     goto loop;
   }
   if (lev >= 4 & o == 40) { /* + */

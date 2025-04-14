@@ -142,10 +142,7 @@ TEST_F(besm6, precedence_mul_or)
     EXPECT_EQ(output, "0 * 5 | 3 -> 3\n");
 }
 
-//
-// Shift operations are not supported by PDP-7 version of B compiler.
-//
-TEST_F(besm6, DISABLED_precedence_mul_lshift)
+TEST_F(besm6, precedence_mul_lshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -155,7 +152,7 @@ TEST_F(besm6, DISABLED_precedence_mul_lshift)
     EXPECT_EQ(output, "4 * 3 << 2 -> 48\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_lshift_lt)
+TEST_F(besm6, precedence_lshift_lt)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -165,7 +162,7 @@ TEST_F(besm6, DISABLED_precedence_lshift_lt)
     EXPECT_EQ(output, "1 << 2 < 5 -> 1\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_sub_rshift)
+TEST_F(besm6, precedence_sub_rshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -175,7 +172,7 @@ TEST_F(besm6, DISABLED_precedence_sub_rshift)
     EXPECT_EQ(output, "16 - 8 >> 1 -> 4\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_lshift_and)
+TEST_F(besm6, precedence_lshift_and)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -185,7 +182,7 @@ TEST_F(besm6, DISABLED_precedence_lshift_and)
     EXPECT_EQ(output, "3 << 2 & 7 -> 4\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_or_rshift)
+TEST_F(besm6, precedence_or_rshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -195,7 +192,7 @@ TEST_F(besm6, DISABLED_precedence_or_rshift)
     EXPECT_EQ(output, "2 | 4 >> 1 -> 2\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_rshift_eq)
+TEST_F(besm6, precedence_rshift_eq)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -205,7 +202,7 @@ TEST_F(besm6, DISABLED_precedence_rshift_eq)
     EXPECT_EQ(output, "8 >> 2 == 2 -> 1\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_mul_lshift_add)
+TEST_F(besm6, precedence_mul_lshift_add)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -215,7 +212,7 @@ TEST_F(besm6, DISABLED_precedence_mul_lshift_add)
     EXPECT_EQ(output, "5 * 2 << 1 + 3 -> 160\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_mod_lshift)
+TEST_F(besm6, precedence_mod_lshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -225,7 +222,7 @@ TEST_F(besm6, DISABLED_precedence_mod_lshift)
     EXPECT_EQ(output, "15 % 4 << 2 -> 12\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_lshift_gt_and)
+TEST_F(besm6, precedence_lshift_gt_and)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -235,7 +232,7 @@ TEST_F(besm6, DISABLED_precedence_lshift_gt_and)
     EXPECT_EQ(output, "1 << 3 > 5 & 2 -> 0\n");
 }
 
-TEST_F(besm6, DISABLED_precedence_add_lshift)
+TEST_F(besm6, precedence_add_lshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -246,7 +243,7 @@ TEST_F(besm6, DISABLED_precedence_add_lshift)
 
 }
 
-TEST_F(besm6, DISABLED_precedence_div_rshift)
+TEST_F(besm6, precedence_div_rshift)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -257,7 +254,7 @@ TEST_F(besm6, DISABLED_precedence_div_rshift)
 
 }
 
-TEST_F(besm6, DISABLED_precedence_and_lshift_or)
+TEST_F(besm6, precedence_and_lshift_or)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -268,7 +265,7 @@ TEST_F(besm6, DISABLED_precedence_and_lshift_or)
 
 }
 
-TEST_F(besm6, DISABLED_precedence_lshift_ne)
+TEST_F(besm6, precedence_lshift_ne)
 {
     auto output = compile_and_run(R"(
         main() {
@@ -279,7 +276,7 @@ TEST_F(besm6, DISABLED_precedence_lshift_ne)
 
 }
 
-TEST_F(besm6, DISABLED_precedence_rshift_ge)
+TEST_F(besm6, precedence_rshift_ge)
 {
     auto output = compile_and_run(R"(
         main() {
