@@ -1,5 +1,5 @@
 /*
- * b.c - B compiler for BESM-6
+ * B compiler for BESM-6
  *
  * Implemented in a subset of the C language compatible with B.
  * Based on B compiler for PDP-7 Unix by Robert Swierczek.

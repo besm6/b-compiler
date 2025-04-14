@@ -1,7 +1,7 @@
-# Prototype of B compiler
+# B compiler for BESM-6
 
-Files:
- * b-compiler.b - Sources of B compiler, written in B
- * b-proto.c - A prototypical compiler for the B language, rewritten in C
- * hello.b - 'Hello World' demo
- * test1.c - Simple demo to show features of the compiler
+Files and directories:
+ * b-besm.b - Sources of B compiler for BESM-6, written in B
+ * libb - Runtime library for B programs
+ * bootstrap - B compiler for BESM-6, written in C, for bootstraping
+ * tests - Unit tests for B compiler

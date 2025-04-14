@@ -1,5 +1,10 @@
 /*
  * B compiler for BESM-6.
+ *
+ * Based on B compiler for PDP-7 Unix by Robert Swierczek.
+ *
+ * (C) 2016 Robert Swierczek, GPL3
+ * (C) 2018, 2025 Serge Vakulenko
  */
 
 main() {
