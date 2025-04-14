@@ -466,13 +466,11 @@ loop:
     peeksym = symbol();
     if (peeksym == 21) { /* number */
       peeksym = -1;
-      if (cval) {
-        gen_lshift(cval); /* shift left by constant */
-      }
+      gen_lshift(cval); /* shift left by constant */
     } else {
       expr(5);
       gen_rvalue();
-      gen_lshift(0); /* shift left by variable */
+      gen_lshacc(); /* shift left by accumulator */
     }
     goto loop;
   }
@@ -481,13 +479,11 @@ loop:
     peeksym = symbol();
     if (peeksym == 21) { /* number */
       peeksym = -1;
-      if (cval) {
-        gen_rshift(cval); /* shift right by constant */
-      }
+      gen_rshift(cval); /* shift right by constant */
     } else {
       expr(5);
       gen_rvalue();
-      gen_rshift(0); /* shift right by variable */
+      gen_rshacc(); /* shift right by accumulator */
     }
     goto loop;
   }
@@ -1168,29 +1164,42 @@ gen_string() {
 }
 
 gen_lshift(n) {
-  if (n) {
-    /* shift left by constant */
-    write('    ');
-    write(',asn,64-');
-    number(n);
-    write('*n');
-  } else {
-    /* shift left by accumulator */
-    /* TODO */
-  }
+  /* shift left by constant */
+  write('    ');
+  write(',asn,64-');
+  number(n & 077);
+  write('*n');
 }
 
 gen_rshift(n) {
-  if (n) {
-    /* shift right by constant */
-    write('    ');
-    write(',asn,64+');
-    number(n);
-    write('*n');
-  } else {
-    /* shift right by accumulator */
-    /* TODO */
-  }
+  /* shift right by constant */
+  write('    ');
+  write(',asn,64+');
+  number(n & 077);
+  write('*n');
+}
+
+gen_lshacc() {
+  /* shift left by accumulator */
+  write('    ');
+  write(',aex,');
+  write('=177*n');
+  write('    ');
+  write(',sti,');
+  write('14*n');
+  write('  14');
+  write(',asn,');
+  write('64+1*n');
+}
+
+gen_rshacc() {
+  /* shift right by accumulator */
+  write('    ');
+  write(',sti,');
+  write('14*n');
+  write('  14');
+  write(',asn,');
+  write('64*n');
 }
 
 jumpc(n) {

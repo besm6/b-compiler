@@ -106,6 +106,29 @@ octal 37777776543211 << 6 = 3777777654321100
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, shift_left_var)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            extrn x, y;
+
+            x = 01234567;
+            y = 9;
+            printf("octal %o << %d = %o*n", x, y, x << y);
+            x = -01234567;
+            y = 6;
+            printf("octal %o << %d = %o*n", x, y, x << y);
+        }
+        x;
+        y;
+    )");
+    const std::string expect = R"(octal 1234567 << 9 = 1234567000
+octal 37777776543211 << 6 = 3777777654321100
+)";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, shift_right_const)
 {
     auto output = compile_and_run(R"(
@@ -126,8 +149,28 @@ octal 2024110321042506 >> 6 = 20241103210425
     EXPECT_EQ(output, expect);
 }
 
-//TODO: shift_left_var
-//TODO: shift_right_var
+TEST_F(besm6, shift_right_var)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            extrn x, y;
+
+            x = 01234567;
+            y = 9;
+            printf("octal %o >> %d = %o*n", x, y, x >> y);
+            x = 'ABCDEF';
+            y = 6;
+            printf("octal %o >> %d = %o*n", x, y, x >> y);
+        }
+        x;
+        y;
+    )");
+    const std::string expect = R"(octal 1234567 >> 9 = 1234
+octal 2024110321042506 >> 6 = 20241103210425
+)";
+    EXPECT_EQ(output, expect);
+}
 
 TEST_F(besm6, relational_equal)
 {
