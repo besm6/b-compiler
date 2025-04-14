@@ -1244,46 +1244,8 @@ label(n) {
   write('*n');
 }
 
-printn(n) {
-  if (n > 9) {
-    printn(n / 10);
-    n = n % 10;
-  }
-  write(n + '0');
-}
-
-printo(n) {
-  if (n < 0) {
-    /* print 30 bits */
-    write('7777');
-    write(' 77');
-    write('0' + ((n >> 27) & 7));
-    write('0' + ((n >> 24) & 7));
-    write(' ');
-    write('0' + ((n >> 21) & 7));
-    write('0' + ((n >> 18) & 7));
-    write('0' + ((n >> 15) & 7));
-    write('0' + ((n >> 12) & 7));
-    write(' ');
-    write('0' + ((n >> 9) & 7));
-    write('0' + ((n >> 6) & 7));
-    write('0' + ((n >> 3) & 7));
-    write('0' + (n & 7));
-    return;
-  }
-  if (n > 7) {
-    printo(n >> 3);
-    n = n & 7;
-  }
-  write(n + '0');
-}
-
 number(x) {
-  if (x < 0) {
-    write('-');
-    x = -x;
-  }
-  printn(x);
+  printd(x);
 }
 
 name(s) {

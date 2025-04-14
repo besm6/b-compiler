@@ -143,11 +143,10 @@ B_TYPE B_FN(nwrite)(B_TYPE file, B_TYPE buffer, B_TYPE count) {
     return (B_TYPE) syscall3(SYS_write, file, buffer, count);
 }
 
-/* The following function will print a non-negative number, n, to
-   the base b, where 2<=b<=10, This routine uses the fact that
-   in the ANSCII character set, the digits O to 9 have sequential
-   code values. */
-void B_FN(printnb)(B_TYPE n, B_TYPE b) {
+/* The following function will print a decimal number, possibly negative.
+   This routine uses the fact that in the ANSCII character set,
+   the digits O to 9 have sequential code values. */
+void B_FN(printd)(B_TYPE n) {
     B_TYPE a;
 
     if(n < 0) {
@@ -155,9 +154,19 @@ void B_FN(printnb)(B_TYPE n, B_TYPE b) {
         n = -n;
     }
 
-    if((a = n / b))
-        B_FN(printnb)(a, b);
-    B_FN(write)(n % b + '0');
+    if((a = n / 10))
+        B_FN(printd)(a);
+    B_FN(write)(n % 10 + '0');
+}
+
+/* The following function will print an unsigned number, n,
+   to the base 8. */
+void B_FN(printo)(B_TYPE n) {
+    B_TYPE a;
+
+    if((a = (uintptr_t)n >> 3))
+        B_FN(printo)(a);
+    B_FN(write)((n & 7) + '0');
 }
 
 /* The following function is a general formatting, printing, and
@@ -178,13 +187,21 @@ loop:
     }
     switch(c = B_FN(_char)(fmt, i++)) {
         case 'd': /* decimal */
+            x = va_arg(ap, B_TYPE);
+            if(x < 0) {
+                x = -x;
+                B_FN(write)('-');
+            }
+            B_FN(printd)(x);
+            goto loop;
+
         case 'o': /* octal */
             x = va_arg(ap, B_TYPE);
             if(x < 0) {
                 x = -x;
                 B_FN(write)('-');
             }
-            B_FN(printnb)(x, c == 'o' ? 8 : 10);
+            B_FN(printo)(x);
             goto loop;
 
         case 'c':
