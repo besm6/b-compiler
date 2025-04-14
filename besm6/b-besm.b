@@ -31,7 +31,7 @@ lookup() {
     rp = &np[1];
   }
   sp = symbuf;
-  if (ns >= &symtab[290]) {
+  if (ns >= &symtab[590]) {
     error("Symbol table overflow");
     eof = 1;
     return (rp);
@@ -554,7 +554,7 @@ loop:
           error("Bad function argument");
           return;
         }
-        narg++;
+        narg = narg + 1;
       }
       gen_call(narg);
     }
@@ -885,7 +885,8 @@ gen_prolog() {
 
   write(' ');
   name(&csym[2]);
-  write(':,name,*n');
+  write(':,name');
+  write(',*n');
 }
 
 gen_entry() {
@@ -894,14 +895,15 @@ gen_entry() {
   if (csym[2] == 'm' & csym[3] == 'a' & csym[4] == 'i' & csym[5] == 'n' & csym[6] == 0) {
     write(' prog');
     write('ram:');
-    write(',entry,');
-    write('*n');
+    write(',entry');
+    write(',*n');
   }
 
   /* for recursive calls */
   write(' ');
   name(&csym[2]);
-  write(':,bss,*n');
+  write(':,bss,');
+  write('*n');
 }
 
 gen_epilog() {
@@ -916,8 +918,8 @@ gen_subp() {
 
   write(' ');
   name(&csym[2]);
-  write(':,subp,');
-  write('*n');
+  write(':,subp');
+  write(',*n');
 }
 
 /* Put address of external name on accumulator. */
@@ -985,16 +987,18 @@ gen_bsave() {
     write('e0:');
   else
     write('e:');
-  write(',subp,*n');
+  write(',subp,');
+  write('*n');
   write(' b/ret');
   write(':,subp');
   write(',*n');
 
   write('    ');
-  write(',its,13');
-  write('*n');
+  write(',its,');
+  write('13*n');
   write('    ');
-  write(',call,b/');
+  write(',call,');
+  write('b/');
   if (nparam == 0)
     write('save0*n');
   else
@@ -1005,8 +1009,8 @@ gen_bret() {
   /* call b/ret */
   gen_rvalue();
   write('    ');
-  write(',uj, b/');
-  write('ret*n');
+  write(',uj, ');
+  write('b/ret*n');
 }
 
 gen_stackp(n) {
@@ -1023,8 +1027,8 @@ gen_mcall() {
 
   assert_lvalue();
   write('    ');
-  write(',ati,14');
-  write('*n');
+  write(',ati,');
+  write('14*n');
 
   write('  14');
   write(',utc,*n');
@@ -1056,7 +1060,8 @@ gen_call(narg) {
   write(',vjm,*n');
   if (narg > 1) {
     write('  15');
-    write(',utm,-1*n');
+    write(',utm,');
+    write('-1*n');
   }
   acc_active = 1;
 }
@@ -1066,8 +1071,8 @@ gen_goto() {
   extrn acc_active;
 
   write('    ');
-  write(',ati,14');
-  write('*n');
+  write(',ati,');
+  write('14*n');
 
   write('  14');
   write(',uj,');
@@ -1079,7 +1084,8 @@ gen_goto() {
 gen_helper(name) {
   /* call helper routine */
   write('    ');
-  write(',call,b/');
+  write(',call,');
+  write('b/');
   write(name);
   write('*n');
 }
@@ -1143,7 +1149,8 @@ gen_rvalue() {
 
   if (is_lvalue) {
     write('    ');
-    write(',ati,14*n');
+    write(',ati,');
+    write('14*n');
     write('  14');
     write(',xta,*n');
     is_lvalue = 0;
@@ -1154,8 +1161,10 @@ gen_string() {
   extrn isn;
   auto str_id, skip_id;
 
-  str_id = isn++;
-  skip_id = isn++;
+  str_id = isn;
+  isn = isn + 1;
+  skip_id = isn;
+  isn = isn + 1;
   jump(skip_id);
   label(str_id);
   getstr();
@@ -1166,7 +1175,8 @@ gen_string() {
 gen_lshift(n) {
   /* shift left by constant */
   write('    ');
-  write(',asn,64-');
+  write(',asn,');
+  write('64-');
   number(n & 077);
   write('*n');
 }
@@ -1174,7 +1184,8 @@ gen_lshift(n) {
 gen_rshift(n) {
   /* shift right by constant */
   write('    ');
-  write(',asn,64+');
+  write(',asn,');
+  write('64+');
   number(n & 077);
   write('*n');
 }
@@ -1289,7 +1300,7 @@ error(msg) {
 
 /* storage */
 
-symtab[300] /* class value name */
+symtab[600] /* class value name */
   1, 5,'a','u','t','o', 0 ,
   1, 6,'e','x','t','r','n', 0 ,
   1,10,'g','o','t','o', 0 ,
