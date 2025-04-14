@@ -372,12 +372,7 @@ case21:
   if (o == 42) { /* * */
     expr(1);
     gen_rvalue();
-    write('   '); /* uind */
-    write(',ati,');
-    write('14*n');
-    write('  14');
-    write(',xta,');
-    write('*n');
+    is_lvalue = 1;
     goto loop;
   }
 
@@ -1255,7 +1250,7 @@ eof;        /* Flag: on end of input file */
 line 1;     /* Current line number in the source file */
 csym;       /* Current symbol: pointer into symtab[] for name or keyword */
 ns;         /* Next symbol: pointer to the free space of symtab[] */
-cval;       /* Numeric value of last parsed literal (number or char) or keyword */
+cval;       /* Numeric value of last parsed literal or keyword */
 isn;        /* Unique internal symbol number */
 nerror;     /* Count of errors in the program */
 nauto;      /* How many auto variables allocated by current function */

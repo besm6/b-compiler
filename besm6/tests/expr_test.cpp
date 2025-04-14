@@ -63,6 +63,29 @@ TEST_F(besm6, unary_logical_not)
     EXPECT_EQ(output, expect);
 }
 
+TEST_F(besm6, unary_indirection)
+{
+    auto output = compile_and_run(R"(
+
+        main() {
+            extrn letters;
+            auto p;
+
+            p = letters;
+            *p = 'q';
+            write(*p);
+            p = p + 1;
+            write(*p);
+            p = p + 1;
+            write(*p);
+            flush();
+        }
+        letters[] 'a', 'b', 'c';
+    )");
+    const std::string expect = "qbc\n";
+    EXPECT_EQ(output, expect);
+}
+
 TEST_F(besm6, relational_equal)
 {
     auto output = compile_and_run(R"(

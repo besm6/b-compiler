@@ -1,4 +1,4 @@
-PROG    = bbesm bcbesm
+PROG    = bbesm
 CFLAGS  = -O -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
@@ -6,7 +6,8 @@ CFLAGS  = -O -Wall -Werror -Wno-multichar
 all:    $(PROG)
 	make -C libb $@
 
-install:
+install: $(PROG)
+	install -m 555 ${PROG} /usr/local/bin/${PROG}
 
 clean:
 	make -C libb $@
