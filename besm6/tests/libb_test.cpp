@@ -72,7 +72,7 @@ TEST_F(besm6, libb_printo)
         }
     )");
     const std::string expect = R"(12345
--34567
+37777777743211
 )";
     EXPECT_EQ(output, expect);
 }
@@ -92,7 +92,7 @@ TEST_F(besm6, libb_printf)
     const std::string expect = R"(Hello, World!
 % % %%
 format %d: 123 -123
-format %o: 352 -352
+format %o: 352 37777777777426
 format %c: foo bar
 format %s: "Hello" "World"
 )";

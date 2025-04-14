@@ -82,12 +82,20 @@ loop:
   if (c == '=')
     return (subseq('=', 80, 60));
 
-  if (c == '<')
-    return (subseq('=', 63, 62));
-
-  if (c == '>')
-    return (subseq('=', 65, 64));
-
+  if (c == '<') {
+    if (subseq('=', 0, 1))
+      return (62); /* <= */
+    if (subseq('<', 0, 1))
+      return (66); /* << */
+    return (63); /* < */
+  }
+  if (c == '>') {
+    if (subseq('=', 0, 1))
+      return (64); /* >= */
+    if (subseq('>', 0, 1))
+      return (67); /* >> */
+    return (65); /* > */
+  }
   if (c == '!')
     return (subseq('=', 34, 61));
 
@@ -451,6 +459,36 @@ loop:
     expr(5);
     gen_rvalue();
     gen_helper('gt'); /* relational greater than */
+    goto loop;
+  }
+  if (lev >= 5 & o == 66) { /* << */
+    gen_rvalue();
+    peeksym = symbol();
+    if (peeksym == 21) { /* number */
+      peeksym = -1;
+      if (cval) {
+        gen_lshift(cval); /* shift left by constant */
+      }
+    } else {
+      expr(5);
+      gen_rvalue();
+      gen_lshift(0); /* shift left by variable */
+    }
+    goto loop;
+  }
+  if (lev >= 5 & o == 67) { /* >> */
+    gen_rvalue();
+    peeksym = symbol();
+    if (peeksym == 21) { /* number */
+      peeksym = -1;
+      if (cval) {
+        gen_rshift(cval); /* shift right by constant */
+      }
+    } else {
+      expr(5);
+      gen_rvalue();
+      gen_rshift(0); /* shift right by variable */
+    }
     goto loop;
   }
   if (lev >= 4 & o == 40) { /* + */
@@ -1127,6 +1165,32 @@ gen_string() {
   getstr();
   label(skip_id);
   gen_intern(str_id);
+}
+
+gen_lshift(n) {
+  if (n) {
+    /* shift left by constant */
+    write('    ');
+    write(',asn,64-');
+    number(n);
+    write('*n');
+  } else {
+    /* shift left by accumulator */
+    /* TODO */
+  }
+}
+
+gen_rshift(n) {
+  if (n) {
+    /* shift right by constant */
+    write('    ');
+    write(',asn,64+');
+    number(n);
+    write('*n');
+  } else {
+    /* shift right by accumulator */
+    /* TODO */
+  }
 }
 
 jumpc(n) {
