@@ -42,6 +42,8 @@ TEST_F(besm6, char_literals)
             printf("%d*n", '*n');
             printf("%d*n", '*r');
             printf("%c*n", '*(*)***'*"');
+            printf("%o*n", ca);
+            printf("%o*n", cb);
         }
     )");
     const std::string expect = R"(0
@@ -50,6 +52,8 @@ TEST_F(besm6, char_literals)
 10
 13
 {}*'"
+2200170
+1423106301032065
 )";
     EXPECT_EQ(output, expect);
 }
