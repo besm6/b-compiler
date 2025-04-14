@@ -148,4 +148,25 @@ TEST_F(besm6, libb_lchar)
     EXPECT_EQ(output, expect);
 }
 
-//TODO: read
+TEST_F(besm6, libb_read)
+{
+    auto output = compile_and_run_with_input(R"(
+        main() {
+            auto ch;
+
+            while (ch = read()) {
+                write(ch);
+            }
+        }
+    )", R"(
+main() {
+    printf("Hello, World!*n");
+}
+)");
+    const std::string expect = R"(
+MAIN() [
+    PRINTF("HELLO, WORLD!*N");
+]
+)";
+    EXPECT_EQ(output, expect);
+}

@@ -65,6 +65,33 @@ std::string besm6::compile_and_run(const std::string &source_code)
 }
 
 //
+// Compile B program and run it with given input.
+// Return output.
+//
+std::string besm6::compile_and_run_with_input(const std::string &source_code, const std::string &input_data)
+{
+    const auto b_filename   = test_name + ".b";
+    const auto asm_filename = test_name + ".assem";
+    const auto exe_filename = test_name + ".exe";
+    const auto in_filename  = test_name + ".input";
+
+    create_file(b_filename, source_code);
+    create_file(in_filename, input_data);
+
+    // Compile B source into assembly code.
+    std::string result;
+    run_command(result, TEST_DIR "/../bbesm < " + b_filename + " > " + asm_filename);
+
+    // Compile assembly code with B library into executable.
+    run_command(result, "besmc " + asm_filename + " " + TEST_DIR "/../libb/libb.obj");
+
+    // Run executable with input.
+    // Return output.
+    run_command(result, "./" + exe_filename + " < " + in_filename);
+    return result;
+}
+
+//
 // Read file contents and return it as a string.
 //
 std::string file_contents(const std::string &filename)
