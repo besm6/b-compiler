@@ -7,9 +7,9 @@ TEST_F(besm6, global_var)
     auto output = compile(R"(
         foo;
     )");
-    EXPECT_EQ(output, R"( foo:,name,
-    ,bss,1
-    ,end,
+    EXPECT_EQ(output, R"( FOO:,NAME,
+    ,BSS,1
+    ,END,
 )");
 }
 
@@ -20,18 +20,18 @@ TEST_F(besm6, empty_program)
             /* empty */
         }
     )");
-    EXPECT_EQ(output, R"( main:8,name,
- program:,entry,
-   8,vtm,20000b
-   9,vtm,40000b
-  10,vtm,60000b
- main:,bss,
- b/save0:,subp,
- b/ret:,subp,
-    ,its,13
-    ,call,b/save0
-    ,uj, b/ret
-    ,end,
+    EXPECT_EQ(output, R"( MAIN:8,NAME,
+ PROGRAM:,ENTRY,
+   8,VTM,20000B
+   9,VTM,40000B
+  10,VTM,60000B
+ MAIN:,BSS,
+ B/SAVE0:,SUBP,
+ B/RET:,SUBP,
+    ,ITS,13
+    ,CALL,B/SAVE0
+    ,UJ, B/RET
+    ,END,
 )");
 }
 
@@ -42,24 +42,24 @@ TEST_F(besm6, hello_write)
             write('Hello*n');
         }
     )");
-    EXPECT_EQ(output, R"( main:8,name,
- program:,entry,
-   8,vtm,20000b
-   9,vtm,40000b
-  10,vtm,60000b
- main:,bss,
- b/save0:,subp,
- b/ret:,subp,
-    ,its,13
-    ,call,b/save0
- write:,subp,
-  14,vtm,write
-    ,ita,14
-    ,xts,=2206255433067412
-  14,vtm,-1
-  15,wtc,
-  13,vjm,
-    ,uj, b/ret
-    ,end,
+    EXPECT_EQ(output, R"( MAIN:8,NAME,
+ PROGRAM:,ENTRY,
+   8,VTM,20000B
+   9,VTM,40000B
+  10,VTM,60000B
+ MAIN:,BSS,
+ B/SAVE0:,SUBP,
+ B/RET:,SUBP,
+    ,ITS,13
+    ,CALL,B/SAVE0
+ WRITE:,SUBP,
+  14,VTM,WRITE
+    ,ITA,14
+    ,XTS,=2204251423047412
+  14,VTM,-1
+  15,WTC,
+  13,VJM,
+    ,UJ, B/RET
+    ,END,
 )");
 }

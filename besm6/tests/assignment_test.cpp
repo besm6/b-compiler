@@ -14,7 +14,7 @@ TEST_F(besm6, assign_global)
         }
         x;
     )");
-    EXPECT_EQ(output, "foo\nbar\n");
+    EXPECT_EQ(output, "FOO\nBAR\n");
 }
 
 TEST_F(besm6, assign_local)
@@ -30,7 +30,7 @@ TEST_F(besm6, assign_local)
             write(z);
         }
     )");
-    EXPECT_EQ(output, "foo\nbar\ndone\n");
+    EXPECT_EQ(output, "FOO\nBAR\nDONE\n");
 }
 
 //

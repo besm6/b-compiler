@@ -34,18 +34,18 @@ TEST_F(besm6, function_definitions)
             n(42);  printf("after n()*n");
         }
     )");
-    const std::string expect = R"(before a()
-after a(), before b()
-after b(), before c()
-after c(), before e()
-after e(), before f()
-after f(), before g()
-after g(), before h()
-after h(), before i()
-after i(), before j()
-after j(), before m()
-after m(), before n()
-after n()
+    const std::string expect = R"(BEFORE A()
+AFTER A(), BEFORE B()
+AFTER B(), BEFORE C()
+AFTER C(), BEFORE E()
+AFTER E(), BEFORE F()
+AFTER F(), BEFORE G()
+AFTER G(), BEFORE H()
+AFTER H(), BEFORE I()
+AFTER I(), BEFORE J()
+AFTER J(), BEFORE M()
+AFTER M(), BEFORE N()
+AFTER N()
 )";
     EXPECT_EQ(output, expect);
 }
@@ -62,7 +62,7 @@ TEST_F(besm6, function_arguments)
             func(123, 'foo', "bar");
         }
     )");
-    const std::string expect = R"(a = 123, b = 'foo', c = "bar"
+    const std::string expect = R"(A = 123, B = 'FOO', C = "BAR"
 )";
     EXPECT_EQ(output, expect);
 }

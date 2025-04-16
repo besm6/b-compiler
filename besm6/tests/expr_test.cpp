@@ -8,14 +8,14 @@ TEST_F(besm6, unary_negate)
 
         main() {
             auto v;
-            v = -102;
-            writeb(-v); /* 102 is ASCII 'f' */
-            v = 145;
-            writeb(-v); /* 256-145 -> 111 is ASCII 'o' */
+            v = -70;
+            writeb(-v); /* 70 is ASCII 'F' */
+            v = 177;
+            writeb(-v); /* 256-177 -> 79 is ASCII 'O' */
             flush();
         }
     )");
-    const std::string expect = "fo\n";
+    const std::string expect = "FO\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -37,7 +37,7 @@ TEST_F(besm6, if_else)
                 write('No*n');
         }
     )");
-    const std::string expect = "Yes\nNo\n";
+    const std::string expect = "YES\nNO\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -59,7 +59,7 @@ TEST_F(besm6, unary_logical_not)
                 write('No*n');
         }
     )");
-    const std::string expect = "No\nYes\n";
+    const std::string expect = "NO\nYES\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -82,7 +82,7 @@ TEST_F(besm6, unary_indirection)
         }
         letters[] 'a', 'b', 'c';
     )");
-    const std::string expect = "qbc\n";
+    const std::string expect = "QBC\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -100,8 +100,8 @@ TEST_F(besm6, shift_left_const)
         }
         x;
     )");
-    const std::string expect = R"(octal 1234567 << 9 = 1234567000
-octal 37777776543211 << 6 = 3777777654321100
+    const std::string expect = R"(OCTAL 1234567 << 9 = 1234567000
+OCTAL 37777776543211 << 6 = 3777777654321100
 )";
     EXPECT_EQ(output, expect);
 }
@@ -123,8 +123,8 @@ TEST_F(besm6, shift_left_var)
         x;
         y;
     )");
-    const std::string expect = R"(octal 1234567 << 9 = 1234567000
-octal 37777776543211 << 6 = 3777777654321100
+    const std::string expect = R"(OCTAL 1234567 << 9 = 1234567000
+OCTAL 37777776543211 << 6 = 3777777654321100
 )";
     EXPECT_EQ(output, expect);
 }
@@ -143,8 +143,8 @@ TEST_F(besm6, shift_right_const)
         }
         x;
     )");
-    const std::string expect = R"(octal 1234567 >> 9 = 1234
-octal 2024110321042506 >> 6 = 20241103210425
+    const std::string expect = R"(OCTAL 1234567 >> 9 = 1234
+OCTAL 2024110321042506 >> 6 = 20241103210425
 )";
     EXPECT_EQ(output, expect);
 }
@@ -166,8 +166,8 @@ TEST_F(besm6, shift_right_var)
         x;
         y;
     )");
-    const std::string expect = R"(octal 1234567 >> 9 = 1234
-octal 2024110321042506 >> 6 = 20241103210425
+    const std::string expect = R"(OCTAL 1234567 >> 9 = 1234
+OCTAL 2024110321042506 >> 6 = 20241103210425
 )";
     EXPECT_EQ(output, expect);
 }
@@ -187,8 +187,8 @@ TEST_F(besm6, relational_equal)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(False
-True
+    const std::string expect = R"(FALSE
+TRUE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -208,8 +208,8 @@ TEST_F(besm6, relational_not_equal)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(True
-False
+    const std::string expect = R"(TRUE
+FALSE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -233,9 +233,9 @@ TEST_F(besm6, relational_less_than)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(True
-False
-False
+    const std::string expect = R"(TRUE
+FALSE
+FALSE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -259,9 +259,9 @@ TEST_F(besm6, relational_less_or_equal)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(True
-True
-False
+    const std::string expect = R"(TRUE
+TRUE
+FALSE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -285,9 +285,9 @@ TEST_F(besm6, relational_greater_than)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(False
-False
-True
+    const std::string expect = R"(FALSE
+FALSE
+TRUE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -311,9 +311,9 @@ TEST_F(besm6, relational_greater_or_equal)
                 write('False*n');
         }
     )");
-    const std::string expect = R"(False
-True
-True
+    const std::string expect = R"(FALSE
+TRUE
+TRUE
 )";
     EXPECT_EQ(output, expect);
 }
@@ -370,12 +370,12 @@ TEST_F(besm6, unary_operators)
 
         x 42;
     )");
-    const std::string expect = R"(global -x = -42, expect -42
-global !x = 1, expect 1
-global *x = 987, expect 987
-local -y = -987, expect -987
-local !y = 1, expect 1
-local *y = 42, expect 42
+    const std::string expect = R"(GLOBAL -X = -42, EXPECT -42
+GLOBAL !X = 1, EXPECT 1
+GLOBAL *X = 987, EXPECT 987
+LOCAL -Y = -987, EXPECT -987
+LOCAL !Y = 1, EXPECT 1
+LOCAL *Y = 42, EXPECT 42
 )";
     EXPECT_EQ(output, expect);
 }
@@ -417,12 +417,12 @@ TEST_F(besm6, negation_in_conditional_context)
 
         x;
     )");
-    const std::string expect = R"(x = 0, y = 100
-if (x) Correct
-if (y) Correct
-if (!x) Correct
-if (!y) Correct
-while (!x) x = 0
+    const std::string expect = R"(X = 0, Y = 100
+IF (X) CORRECT
+IF (Y) CORRECT
+IF (!X) CORRECT
+IF (!Y) CORRECT
+WHILE (!X) X = 0
 )";
     EXPECT_EQ(output, expect);
 }
@@ -460,13 +460,13 @@ TEST_F(besm6, DISABLED_postfix_increment_decrement)
             printf("%d*n", sub(42, 123));
         }
     )");
-    const std::string expect = R"(increment 42
+    const std::string expect = R"(INCREMENT 42
 43
-add 42 + 123
+ADD 42 + 123
 165
-decrement 42
+DECREMENT 42
 41
-subtract 42 - 123
+SUBTRACT 42 - 123
 -81
 )";
     EXPECT_EQ(output, expect);
@@ -500,9 +500,9 @@ TEST_F(besm6, assign_operators)
 
         g;
     )");
-    const std::string expect = R"(assign local 42
+    const std::string expect = R"(ASSIGN LOCAL 42
 42
-assign global 42
+ASSIGN GLOBAL 42
 42
 )";
     EXPECT_EQ(output, expect);
@@ -523,9 +523,9 @@ TEST_F(besm6, global_scalars)
             printf("c = '%c'*n", c);
         }
     )");
-    const std::string expect = R"(a = 0
-b = 123
-c = 'foo'
+    const std::string expect = R"(A = 0
+B = 123
+C = 'FOO'
 )";
     EXPECT_EQ(output, expect);
 }
@@ -548,10 +548,10 @@ TEST_F(besm6, local_vector)
             printf("offset c = %d*n", &c - &a);
         }
     )");
-    const std::string expect = R"(local b = 123, 'local', "string"
-offset a = 0
-offset b = 1
-offset c = 5
+    const std::string expect = R"(LOCAL B = 123, 'LOCAL', "STRING"
+OFFSET A = 0
+OFFSET B = 1
+OFFSET C = 5
 )";
     EXPECT_EQ(output, expect);
 }
@@ -568,8 +568,8 @@ TEST_F(besm6, global_vector)
             printf("address = %d, %d, %d*n", &g[0] - &g, &g[1] - &g, &g[2] - &g);
         }
     )");
-    const std::string expect = R"(global = 123, -345, 'foo'
-address = 1, 2, 3
+    const std::string expect = R"(GLOBAL = 123, -345, 'FOO'
+ADDRESS = 1, 2, 3
 )";
     EXPECT_EQ(output, expect);
 }
@@ -697,7 +697,7 @@ TEST_F(besm6, eq_by_bitmask)
             }
         }
     )");
-    EXPECT_EQ(output, "Small positive: 51\n");
+    EXPECT_EQ(output, "SMALL POSITIVE: 51\n");
 }
 
 TEST_F(besm6, octal_literals)

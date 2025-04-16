@@ -41,7 +41,7 @@ TEST_F(besm6, libb_write)
             write('!*n');
         }
     )");
-    const std::string expect = "Hello, World!\n";
+    const std::string expect = "HELLO, WORLD!\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -89,12 +89,12 @@ TEST_F(besm6, libb_printf)
             printf("format %%s: *"%s*" *"%s*"*n", "Hello", "World");
         }
     )");
-    const std::string expect = R"(Hello, World!
+    const std::string expect = R"(HELLO, WORLD!
 % % %%
-format %d: 123 -123
-format %o: 352 37777777777426
-format %c: foo bar
-format %s: "Hello" "World"
+FORMAT %D: 123 -123
+FORMAT %O: 352 37777777777426
+FORMAT %C: FOO BAR
+FORMAT %S: "HELLO" "WORLD"
 )";
     EXPECT_EQ(output, expect);
 }
@@ -108,7 +108,7 @@ TEST_F(besm6, libb_exit)
             printf("after exit()*n");
         }
     )");
-    const std::string expect = "before exit()\n";
+    const std::string expect = "BEFORE EXIT()\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -124,7 +124,7 @@ TEST_F(besm6, libb_char)
             write('*n');
         }
     )");
-    const std::string expect = "brufa\n";
+    const std::string expect = "BRUFA\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -144,7 +144,7 @@ TEST_F(besm6, libb_lchar)
             write('*n');
         }
     )");
-    const std::string expect = "fubar\n";
+    const std::string expect = "FUBAR\n";
     EXPECT_EQ(output, expect);
 }
 
@@ -162,9 +162,9 @@ TEST_F(besm6, libb_read)
     printf("Hello, World!*n");
 }
 )");
-    const std::string expect = R"(MAIN() [
+    const std::string expect = R"(MAIN() ≤
     PRINTF("HELLO, WORLD!*N");
-]
+≥
 )";
     EXPECT_EQ(output, expect);
 }

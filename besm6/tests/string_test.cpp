@@ -19,8 +19,8 @@ TEST_F(besm6, string_literals)
             printf("%d %d %d %d %d*n", char(sb, 0), char(sb, 1), char(sb, 2), char(sb, 3), char(sb, 4));
         }
     )");
-    const std::string expect = R"({}*"
-9 0 120
+    const std::string expect = R"(≤≥*"
+9 0 88
 49 50 51 4 53
 )";
     EXPECT_EQ(output, expect);
@@ -51,8 +51,8 @@ TEST_F(besm6, char_literals)
 9
 10
 13
-{}*'"
-2200170
+≤≥*'"
+2200130
 1423106301032065
 )";
     EXPECT_EQ(output, expect);
