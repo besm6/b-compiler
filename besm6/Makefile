@@ -23,13 +23,24 @@ build:
 #
 # Build B compiler from B source
 #
-bbesm:  b-besm.b
-	bcause $< -o $@
+bbesm:  b-besm.b bcause libb.a
+	./bcause b-besm.b -L. -o $@
 	#nm -n $@ > b.nm
 	#objdump -S $@ > b.dis
 
 #
-# Build B compiler from C source
+# Build B compiler for x86_64
 #
-bcbesm: b-proto.c
-	$(CC) $(CFLAGS) $< -o $@
+BCAUSE_SRC = ../intel64/compiler.c ../intel64/list.c ../intel64/main.c
+bcause: $(BCAUSE_SRC)
+	$(CC) $(CFLAGS) $(BCAUSE_SRC) -o $@
+
+#
+# Special version of B library for BESM-6.
+# Functions read() converts from UTF-8 to KOI-7.
+# Functions writeb() converts from KOI-7 to UTF-8.
+#
+libb.a: libb.c
+	${CC} ${CFLAGS} -ffreestanding -c $<
+	ar r $@ libb.o
+	ranlib $@

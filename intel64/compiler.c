@@ -414,8 +414,8 @@ static intptr_t character(struct compiler_args *args, FILE *in)
             }
         }
 
-        // Little endian.
-        value |= ((uintptr_t) (uint8_t) c) << (i * 8);
+        // Big endian.
+        value = ((uintptr_t) value << 8) | (uint8_t) c;
     }
 
     if (fgetc(in) != '\'') {

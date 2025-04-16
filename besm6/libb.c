@@ -39,26 +39,7 @@ static inline SYSCALL_TYPE syscall3(SYSCALL_TYPE n, SYSCALL_TYPE a1, SYSCALL_TYP
 /* syscall ids */
 #define SYS_read 0
 #define SYS_write 1
-#define SYS_open 2
-#define SYS_close 3
-#define SYS_stat 4
-#define SYS_fstat 5
-#define SYS_seek 8
-#define SYS_fork 57
-#define SYS_execve 59
 #define SYS_exit 60
-#define SYS_wait4 61
-#define SYS_chdir 80
-#define SYS_mkdir 83
-#define SYS_creat 85
-#define SYS_link 86
-#define SYS_unlink 87
-#define SYS_chmod 90
-#define SYS_chown 92
-#define SYS_gettimeofday 96
-#define SYS_getuid 102
-#define SYS_setuid 105
-#define SYS_time 201
 
 //
 // B standard library implementation
@@ -98,28 +79,15 @@ B_TYPE B_FN(read)(void) {
     B_TYPE c = 0;
     if (syscall3(SYS_read, 0, (B_TYPE)&c, 1) == 1) {
         if (c > 0 && c <= 127) {
+            // Valid ASCII character.
             return c;
-        } else {
-            // Non-ascii character.
-            return 0;
         }
-    } else {
-        // End of file or i/o error.
-        return 4; // ETX
     }
+
+    // End of file or i/o error.
+    return 0;
 }
 
-/* Count bytes are read into the vector buffer from the open
-   file designated by file. The actual number of bytes read
-   are returned. A negative number returned indicates an
-   error. */
-B_TYPE B_FN(nread)(B_TYPE file, B_TYPE buffer, B_TYPE count) {
-    return (B_TYPE) syscall3(SYS_read, file, buffer, count);
-}
-
-//
-// One or more characters are written on the standard output file.
-//
 B_TYPE fout = 0;
 
 //
@@ -139,14 +107,6 @@ void B_FN(write)(B_TYPE c) {
         B_FN(write)(a);
 
     writeb(c);
-}
-
-/* Count bytes are written out of the vector buffer on the
-   open file designated by file. The actual number of bytes
-   written are returned. A negative number returned indicates
-   an error. */
-B_TYPE B_FN(nwrite)(B_TYPE file, B_TYPE buffer, B_TYPE count) {
-    return (B_TYPE) syscall3(SYS_write, file, buffer, count);
 }
 
 /* The following function will print a decimal number, possibly negative.
