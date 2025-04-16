@@ -54,7 +54,7 @@ lookup() {
 
 symbol() {
   extrn symbuf, ctab, peeksym, peekc, eof, line, csym, cval;
-  auto b, c, ct, sp;
+  auto c, ct, sp;
 
   if (peeksym >= 0) {
     c = peeksym;
@@ -133,13 +133,16 @@ com1:
   }
   if (ct == 124) { /* number */
     cval = 0;
-    if (c == '0')
-      b = 8;
-    else
-      b = 10;
-    while (c >= '0' & c <= '9') {
-      cval = cval*b + c -'0';
-      c = read();
+    if (c == '0') {
+      while (c >= '0' & c <= '7') {
+        cval = (cval << 3) | (c & 7);
+        c = read();
+      }
+    } else {
+      while (c >= '0' & c <= '9') {
+        cval = cval*10 + c - '0';
+        c = read();
+      }
     }
     peekc = c;
     return (21);
