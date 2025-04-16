@@ -20,16 +20,14 @@ TEST_F(besm6, empty_program)
             /* empty */
         }
     )");
-    EXPECT_EQ(output, R"( MAIN:8,NAME,
+    EXPECT_EQ(output, R"( MAIN:,NAME,
  PROGRAM:,ENTRY,
-   8,VTM,20000B
-   9,VTM,40000B
-  10,VTM,60000B
  MAIN:,BSS,
  B/SAVE0:,SUBP,
  B/RET:,SUBP,
     ,ITS,13
     ,CALL,B/SAVE0
+   5,BASE,*+10000B
     ,UJ, B/RET
     ,END,
 )");
@@ -42,16 +40,14 @@ TEST_F(besm6, hello_write)
             write('Hello*n');
         }
     )");
-    EXPECT_EQ(output, R"( MAIN:8,NAME,
+    EXPECT_EQ(output, R"( MAIN:,NAME,
  PROGRAM:,ENTRY,
-   8,VTM,20000B
-   9,VTM,40000B
-  10,VTM,60000B
  MAIN:,BSS,
  B/SAVE0:,SUBP,
  B/RET:,SUBP,
     ,ITS,13
     ,CALL,B/SAVE0
+   5,BASE,*+10000B
  WRITE:,SUBP,
   14,VTM,WRITE
     ,ITA,14

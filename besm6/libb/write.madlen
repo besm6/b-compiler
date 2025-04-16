@@ -1,4 +1,5 @@
-   write: 8 ,name,
+     write: ,name,
+         10 ,base,*             . avoid conflict with writeb() and flush()
 c
 c Append a multi-char to the stdout buffer.
 c

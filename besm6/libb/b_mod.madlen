@@ -1,4 +1,5 @@
-   b/mod: 8 ,name,
+     b/mod: ,name,
+         14 ,base,*
 c
 c Calculate the remainder of the division of two integers.
 c Pop two values from stack.

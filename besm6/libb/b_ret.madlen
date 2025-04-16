@@ -5,7 +5,8 @@ c Called on exit from a B function.
 c
           6 ,mtj, 14
           7 ,mtj, 15
-          7 ,stx, -4
+          7 ,stx, -5
+            ,sti, 5
             ,sti, 6
             ,sti, 7
             ,sti, 13

@@ -1,4 +1,5 @@
-   lchar: 8 ,name,
+     lchar: ,name,
+         14 ,base,*
 c
 c Replace one byte of string at index with value ch.
 c Byte ch returned.

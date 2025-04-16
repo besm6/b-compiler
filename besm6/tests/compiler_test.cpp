@@ -10,16 +10,14 @@ TEST_F(besm6, native_empty_program)
             /* empty */
         }
     )");
-    const std::string expect = R"( MAIN:8,NAME,
+    const std::string expect = R"( MAIN:,NAME,
  PROGRAM:,ENTRY,
-   8,VTM,20000B
-   9,VTM,40000B
-  10,VTM,60000B
  MAIN:,BSS,
  B/SAVE0:,SUBP,
  B/RET:,SUBP,
     ,ITS,13
     ,CALL,B/SAVE0
+   5,BASE,*+10000B
     ,UJ, B/RET
     ,END,
 )";

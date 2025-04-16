@@ -619,7 +619,7 @@ extdef() {
   o = symbol();
 
   if (o == 2 | o == 6) { /* { ( */
-    gen_prolog(1);
+    gen_prolog();
     gen_entry();
     nauto = 0;
     nparam = 0;
@@ -648,7 +648,7 @@ extdef() {
       }
       cval = negate(cval);
     }
-    gen_prolog(0);
+    gen_prolog();
     write('    ');
     write(',log,');
     printo(cval);
@@ -658,7 +658,7 @@ extdef() {
   }
 
   if (o == 1) { /* ; */
-    gen_prolog(0);
+    gen_prolog();
     write('    ');
     write(',bss,1');
     write('*n');
@@ -674,7 +674,7 @@ extdef() {
     }
     if (o != 5) /* ] */
       goto syntax;
-    gen_prolog(0);
+    gen_prolog();
     write('    ');
     write(',z00,*n');
     write('    ');
@@ -875,19 +875,14 @@ assert_lvalue() {
   }
 }
 
-gen_prolog(based) {
+gen_prolog() {
   /* start Madlen module */
   extrn csym;
 
   write(' ');
   name(&csym[2]);
-  write(':');
-  if (based) {
-    /* globally based by registers 8,9,10 */
-    write('8');
-  }
-  write(',name,');
-  write('*n');
+  write(':,name');
+  write(',*n');
 }
 
 gen_entry() {
@@ -899,17 +894,6 @@ gen_entry() {
     write('ram:');
     write(',entry');
     write(',*n');
-
-    /* global basing */
-    write('   8');
-    write(',vtm,2');
-    write('0000b*n');
-    write('   9');
-    write(',vtm,4');
-    write('0000b*n');
-    write('  10');
-    write(',vtm,6');
-    write('0000b*n');
   }
 
   /* for recursive calls */
@@ -1016,6 +1000,12 @@ gen_bsave() {
     write('save0*n');
   else
     write('save*n');
+
+  /* basing */
+  write('   5');
+  write(',base,');
+  write('**+1000');
+  write('0b*n');
 }
 
 gen_bret() {
