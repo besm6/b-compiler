@@ -11,7 +11,7 @@ install: $(PROG)
 
 clean:
 	make -C libb $@
-	rm -f ${PROG} *.s *.nm *.dis *.trace
+	rm -f ${PROG} *.a *.s *.nm *.dis *.trace
 
 test:   all build
 	make -C build btest
@@ -25,8 +25,6 @@ build:
 #
 bbesm:  b-besm.b bcause libb.a
 	./bcause b-besm.b -L. -o $@
-	#nm -n $@ > b.nm
-	#objdump -S $@ > b.dis
 
 #
 # Build B compiler for x86_64

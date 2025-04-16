@@ -1282,7 +1282,7 @@ symtab[600] /* class value name */
 
 ctab[]
     0,127,127,127,  0,127,127,127,  /* NUL SOH STX ETX EOT ENQ ACK BEL */
-  127,126,126,127,127,127,127,127,  /* BS  TAB LF  VT  FF  CR  SO  SI  */
+  127,126,126,127,127,127,  2,  3,  /* BS  TAB LF  VT  FF  CR  SO  SI  */
   127,127,127,127,127,127,127,127,  /* DLE DC1 DC2 DC3 DC4 NAK SYN ETB */
   127,127,127,127,127,127,127,127,  /* CAN EM  SUB ESC FS  GS  RS  US  */
   126, 34,122,127,127, 44, 47,121,  /* SPC  !   "   #   $   %   &   '  */

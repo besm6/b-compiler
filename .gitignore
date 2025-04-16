@@ -20,6 +20,7 @@ tmp
 *.trace
 *.b-
 *.madlen-
+*.cpp-
 *.lst
 *.obj
 TODO
