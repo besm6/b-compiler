@@ -23,15 +23,15 @@ build:
 #
 # Build B compiler from B source
 #
-bbesm:  b-besm.b bcause libb.a
-	./bcause b-besm.b -L. -o $@
+bbesm:  b-besm.b bcause-koi7 libb.a
+	./bcause-koi7 b-besm.b -L. -o $@
 
 #
 # Build B compiler for x86_64
 #
 BCAUSE_SRC = ../intel64/compiler.c ../intel64/list.c ../intel64/main.c
-bcause: $(BCAUSE_SRC)
-	$(CC) $(CFLAGS) $(BCAUSE_SRC) -o $@
+bcause-koi7: $(BCAUSE_SRC)
+	$(CC) $(CFLAGS) -DKOI7 $(BCAUSE_SRC) -o $@
 
 #
 # Special version of B library for BESM-6.

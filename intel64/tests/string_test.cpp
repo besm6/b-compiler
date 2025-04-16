@@ -17,7 +17,7 @@ TEST_F(bcause, string_literals)
             printf("%d %d %d %d %d*n", char(sb, 0), char(sb, 1), char(sb, 2), char(sb, 3), char(sb, 4));
         }
     )");
-    const std::string expect = R"(()*"
+    const std::string expect = R"({}*"
 9 0 102
 102 111 111 0 98
 )";
@@ -47,7 +47,7 @@ TEST_F(bcause, char_literals)
 9
 10
 13
-()*'"
+{}*'"
 )";
     EXPECT_EQ(output, expect);
 }

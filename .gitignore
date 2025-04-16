@@ -1,6 +1,7 @@
 bbesm
 bcbesm
 bcause
+bcause-koi7
 b7
 bc7
 build
@@ -23,4 +24,5 @@ tmp
 *.cpp-
 *.lst
 *.obj
+*.exe
 TODO

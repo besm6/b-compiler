@@ -372,6 +372,68 @@ static intptr_t number(struct compiler_args *args, FILE *in)
     return num;
 }
 
+#ifdef KOI7
+static int ascii_to_koi7(struct compiler_args *args, int c)
+{
+    // See unicode_to_koi7() for details.
+    static const unsigned char tab[128] = {
+        /* 00 - 07 */  0,    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        /* 08 - 0f */  0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        /* 10 - 17 */  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        /* 18 - 1f */  0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+        /*  !"#$%&' */ 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
+        /* ()*+,-./ */ 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+        /* 01234567 */ 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
+        /* 89:;<=>? */ 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+        /* @ABCDEFG */ 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+        /* HIJKLMNO */ 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+        /* PQRSTUVW */ 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57,
+        /* XYZ[\]^_ */ 0x58, 0x59, 0x5a, 0x5b, 0x1d, 0x5d, 0x5c, 0x5f,
+        /* `abcdefg */ 0,    0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, //  ABCDEFG
+        /* hijklmno */ 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, // HIJKLMNO
+        /* pqrstuvw */ 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, // PQRSTUVW
+        /* xyz{|}~  */ 0x58, 0x59, 0x5a, 0x0e, 0x5e, 0x0f, 0x1f, 0,    // XYZ≤|≥¬
+    };
+    if (c < 0 || c > 127) {
+        eprintf(args->arg0, "invalid input character \%03o", (uint8_t)c);
+        exit(1);
+    }
+    return tab[c];
+}
+#endif
+
+//
+// Parse an escape character.
+// Return value.
+//
+static int escape(struct compiler_args *args, FILE *in)
+{
+    int c = fgetc(in);
+
+    switch (c) {
+    case '0':
+    case 'e':
+        return '\0';
+    case '*':
+    case '\'':
+    case '"':
+        return c;
+    case '(':
+        return '{';
+    case ')':
+        return '}';
+    case 't':
+        return '\t';
+    case 'n':
+        return '\n';
+    case 'r':
+        return '\r';
+    default:
+        eprintf(args->arg0, "undefined escape character " QUOTE_FMT("*%c"), c);
+        exit(1);
+    }
+}
+
 //
 // Parse a multi-character literal.
 // Return value.
@@ -386,34 +448,12 @@ static intptr_t character(struct compiler_args *args, FILE *in)
         if ((c = fgetc(in)) == '\'') {
             return value;
         }
-
         if (c == '*') {
-            switch (c = fgetc(in)) {
-            case '0':
-            case 'e':
-                c = '\0';
-                break;
-            case '(':
-            case ')':
-            case '*':
-            case '\'':
-            case '"':
-                break;
-            case 't':
-                c = '\t';
-                break;
-            case 'n':
-                c = '\n';
-                break;
-            case 'r':
-                c = '\r';
-                break;
-            default:
-                eprintf(args->arg0, "undefined escape character " QUOTE_FMT("*%c"), c);
-                exit(1);
-            }
+            c = escape(args, in);
         }
-
+#ifdef KOI7
+        c = ascii_to_koi7(args, c);
+#endif
         // Big endian.
         value = ((uintptr_t) value << 8) | (uint8_t) c;
     }
@@ -438,32 +478,15 @@ static void string(struct compiler_args *args, FILE *in)
 
     while ((c = fgetc(in)) != '"') {
         if (c == '*') {
-            switch (c = fgetc(in)) {
-            case '0':
-            case 'e':
-                c = '\0';
-                break;
-            case '(':
-            case ')':
-            case '*':
-            case '\'':
-            case '"':
-                break;
-            case 't':
-                c = '\t';
-                break;
-            case 'n':
-                c = '\n';
-                break;
-            default:
-                eprintf(args->arg0, "undefined escape character " QUOTE_FMT("*%c"), c);
-                exit(1);
-            }
+            c = escape(args, in);
         }
         else if (c == EOF) {
             eprintf(args->arg0, "unterminated string literal");
             exit(1);
         }
+#ifdef KOI7
+        c = ascii_to_koi7(args, c);
+#endif
         string[size] = c;
         size++;
         if (size >= alloc)
