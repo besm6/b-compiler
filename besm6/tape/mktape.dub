@@ -1,0 +1,23 @@
+*name make b tape
+*disc: 1/local
+*file: source, 40
+*file: libb, 41
+*file: tape, 66, w
+*
+*       Create B library at zones 0-17
+*
+*call perso: 41
+*library: 2
+*call newlib
+drum
+*
+*       Create B compiler binary at zones 20-57
+*
+*no list
+*madlen
+*read: 40
+*call overlay: 66020
+ /montran(main)
+ main
+*end record
+*end file

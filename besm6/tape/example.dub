@@ -1,0 +1,10 @@
+*name hello B
+*disc: 1/local
+*file: tape, 40
+*library: 40
+*trans-main: 40020
+main() {
+    write('Hello,');
+    write(' B!*n');
+}
+*end file
