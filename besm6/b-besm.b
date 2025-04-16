@@ -895,6 +895,17 @@ gen_entry() {
     write('ram:');
     write(',entry');
     write(',*n');
+
+    /* global basing */
+    write('   8');
+    write(',vtm,2');
+    write('0000b*n');
+    write('   9');
+    write(',vtm,4');
+    write('0000b*n');
+    write('  10');
+    write(',vtm,6');
+    write('0000b*n');
   }
 
   /* for recursive calls */
