@@ -435,7 +435,8 @@ loop:
             B_FN(writeb)('%');
             goto loop;
     }
-    B_FN(writeb)(c);
+    /* Unknown format. */
+    B_FN(writeb)('%');
     i--;
     goto loop;
 

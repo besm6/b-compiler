@@ -32,6 +32,7 @@ loop:
         }
     } else {
         /* bad format specification, ignore */
+        writeb('%');
         goto loop;
     }
     ++i;

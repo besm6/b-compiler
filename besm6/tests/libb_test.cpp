@@ -87,6 +87,7 @@ TEST_F(besm6, libb_printf)
             printf("format %%o: %o %o*n", 234, -234);
             printf("format %%c: %c %c*n", 'foo', 'bar');
             printf("format %%s: *"%s*" *"%s*"*n", "Hello", "World");
+            printf("unknown format: %q*n", "foo");
         }
     )");
     const std::string expect = R"(HELLO, WORLD!
@@ -95,6 +96,7 @@ FORMAT %D: 123 -123
 FORMAT %O: 352 37777777777426
 FORMAT %C: FOO BAR
 FORMAT %S: "HELLO" "WORLD"
+UNKNOWN FORMAT: %Q
 )";
     EXPECT_EQ(output, expect);
 }
