@@ -13,6 +13,12 @@ TEST_F(besm6, global_var)
 )");
 }
 
+TEST_F(besm6, syntax_error)
+{
+    auto output = compile("123;\n");
+    EXPECT_EQ(output, "ERROR AT LINE 1: BAD EXTERNAL DECLARATION\n");
+}
+
 TEST_F(besm6, empty_program)
 {
     auto output = compile(R"(

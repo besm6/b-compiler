@@ -399,6 +399,7 @@ loop:
     }
     switch(c = B_FN(_char)(fmt, i++)) {
         case 'd': /* decimal */
+        case 'D':
             x = va_arg(ap, B_TYPE);
             if(x < 0) {
                 x = -x;
@@ -408,6 +409,7 @@ loop:
             goto loop;
 
         case 'o': /* octal */
+        case 'O':
             x = va_arg(ap, B_TYPE);
             if(x < 0) {
                 x = -x;
@@ -417,11 +419,13 @@ loop:
             goto loop;
 
         case 'c':
+        case 'C':
             x = va_arg(ap, B_TYPE);
             B_FN(writeb)(x);
             goto loop;
 
         case 's':
+        case 'S':
             x = va_arg(ap, B_TYPE);
             j = 0;
             while((c = B_FN(_char)(x, j++)) != '\0')
