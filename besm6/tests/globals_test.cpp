@@ -5,9 +5,9 @@
 TEST_F(besm6, global_var)
 {
     auto output = compile(R"(
-        foo;
+        foo_$;
     )");
-    EXPECT_EQ(output, R"( FOO:,NAME,
+    EXPECT_EQ(output, R"( FOO*/:,NAME,
     ,BSS,1
     ,END,
 )");
