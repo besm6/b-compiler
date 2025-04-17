@@ -8,13 +8,13 @@ loop:
         if (c == '*0')
             return;
         writeb(c);
-        i = i + 1;
+        ++i;
     }
-    i = i + 1;
+    ++i;
     c = char(fmt, i);
     if (c == '%') {
         writeb('%');
-        i = i + 1;
+        ++i;
         goto loop;
     }
     a = *ap;
@@ -28,13 +28,13 @@ loop:
         n = 0;
         while ((c = char(a, n)) != '*0') {
             writeb(c);
-            n = n + 1;
+            ++n;
         }
     } else {
         /* bad format specification, ignore */
         goto loop;
     }
-    i = i + 1;
-    ap = ap + 1;
+    ++i;
+    ++ap;
     goto loop;
 }

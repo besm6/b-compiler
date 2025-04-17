@@ -25,10 +25,10 @@ read() {
         while (read_len >= 0) {
             if (char(&moncard_, read_len) != ' ')
                 goto done;
-            read_len = read_len - 1;
+            --read_len;
         }
 done:
-        read_len = read_len + 1;
+        ++read_len;
     }
 
     if (read_idx == read_len) {
@@ -39,7 +39,7 @@ done:
     }
 
     ch = char(&moncard_, read_idx);
-    read_idx = read_idx + 1;
+    ++read_idx;
     return (ch);
 }
 

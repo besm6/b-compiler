@@ -86,6 +86,10 @@ loop:
 
   if (c == '=')
     return (subseq('=', 80, 60));
+  if (c == '+')
+    return (subseq('+', 40, 68)); /* + ++ */
+  if (c == '-')
+    return (subseq('-', 41, 69)); /* - -- */
 
   if (c == '<') {
     if (subseq('=', 0, 1))
@@ -378,6 +382,30 @@ case21:
     goto loop;
   }
 
+  if (o == 68) { /* prefix ++ */
+    expr(1);
+    assert_lvalue();
+    gen_rvalue();
+    write('    ');
+    write(',a+x,');
+    write('=1*n');
+    write('  14');
+    write(',atx,*n');
+    goto loop;
+  }
+
+  if (o == 69) { /* prefix -- */
+    expr(1);
+    assert_lvalue();
+    gen_rvalue();
+    write('    ');
+    write(',a-x,');
+    write('=1*n');
+    write('  14');
+    write(',atx,*n');
+    goto loop;
+  }
+
   if (o == 47) { /* & */
     expr(1);
     assert_lvalue();
@@ -550,11 +578,35 @@ loop:
           error("Bad function argument");
           return;
         }
-        narg = narg + 1;
+        ++narg;
       }
       gen_call(narg);
     }
     is_lvalue = 0;
+    goto loop;
+  }
+  if (o == 68) { /* postfix ++ */
+    assert_lvalue();
+    gen_rvalue();
+    write('  15');
+    write(',atx,*n');
+    write('    ');
+    write(',a+x,');
+    write('=1*n');
+    write('  14');
+    write(',stx,*n');
+    goto loop;
+  }
+  if (o == 69) { /* postfix -- */
+    assert_lvalue();
+    gen_rvalue();
+    write('  15');
+    write(',atx,*n');
+    write('    ');
+    write(',a-x,');
+    write('=1*n');
+    write('  14');
+    write(',stx,*n');
     goto loop;
   }
 
@@ -1164,10 +1216,8 @@ gen_string() {
   extrn isn;
   auto str_id, skip_id;
 
-  str_id = isn;
-  isn = isn + 1;
-  skip_id = isn;
-  isn = isn + 1;
+  str_id = isn++;
+  skip_id = isn++;
   jump(skip_id);
   label(str_id);
   getstr();
@@ -1259,7 +1309,7 @@ error(msg) {
     eof = 1;
     return;
   }
-  nerror = nerror + 1;
+  ++nerror;
   printf("Error at line %d: %s*n", line, msg);
 }
 

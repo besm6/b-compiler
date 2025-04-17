@@ -427,14 +427,16 @@ WHILE (!X) X = 0
     EXPECT_EQ(output, expect);
 }
 
-//
-// Operators ++ and -- are not supported by PDP-7 version of B compiler.
-//
-TEST_F(besm6, DISABLED_postfix_increment_decrement)
+TEST_F(besm6, increment)
 {
     auto output = compile_and_run(R"(
-        incr(x) {
-            printf("increment %d*n", x++);
+        preincr(x) {
+            printf("prefix increment %d*n", ++x);
+            return (x);
+        }
+
+        postincr(x) {
+            printf("postfix increment %d*n", x++);
             return (x);
         }
 
@@ -443,8 +445,32 @@ TEST_F(besm6, DISABLED_postfix_increment_decrement)
             return (a + b);
         }
 
-        decr(x) {
-            printf("decrement %d*n", x--);
+        main() {
+            printf("%d*n", preincr(42));
+            printf("%d*n", postincr(42));
+            printf("%d*n", add(42, 123));
+        }
+    )");
+    const std::string expect = R"(PREFIX INCREMENT 43
+43
+POSTFIX INCREMENT 42
+43
+ADD 42 + 123
+165
+)";
+    EXPECT_EQ(output, expect);
+}
+
+TEST_F(besm6, decrement)
+{
+    auto output = compile_and_run(R"(
+        predecr(x) {
+            printf("prefix decrement %d*n", --x);
+            return (x);
+        }
+
+        postdecr(x) {
+            printf("postfix decrement %d*n", x--);
             return (x);
         }
 
@@ -454,17 +480,14 @@ TEST_F(besm6, DISABLED_postfix_increment_decrement)
         }
 
         main() {
-            printf("%d*n", incr(42));
-            printf("%d*n", add(42, 123));
-            printf("%d*n", decr(42));
+            printf("%d*n", predecr(42));
+            printf("%d*n", postdecr(42));
             printf("%d*n", sub(42, 123));
         }
     )");
-    const std::string expect = R"(INCREMENT 42
-43
-ADD 42 + 123
-165
-DECREMENT 42
+    const std::string expect = R"(PREFIX DECREMENT 41
+41
+POSTFIX DECREMENT 42
 41
 SUBTRACT 42 - 123
 -81
