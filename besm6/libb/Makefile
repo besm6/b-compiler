@@ -1,4 +1,4 @@
-B_SOURCES = printd.b printo.b printf.b read.b
+B_SOURCES = printd.b printo.b printf.b read.b write.b
 
 B_ASM = $(patsubst %.b,%.madlen,$(B_SOURCES))
 
@@ -21,8 +21,7 @@ ASM_SOURCES = \
         exit.madlen \
         flush.madlen \
         lchar.madlen \
-        writeb.madlen \
-        write.madlen \
+        writeb.madlen
 
 .PHONY: all install clean test
 
