@@ -5,3 +5,5 @@ printd.madlen
 printo.madlen
 read.madlen
 write.madlen
+writeb.madlen
+flush.madlen

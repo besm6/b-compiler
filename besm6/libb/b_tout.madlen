@@ -1,0 +1,12 @@
+    b/tout: ,name,
+c
+c Write line to stdout.
+c
+            ,ati, 12
+            ,utc, info
+            ,*71,
+         13 ,uj,
+c
+   info: 12 ,040,
+            ,   ,
+            ,end,

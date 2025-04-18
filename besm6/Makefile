@@ -12,6 +12,7 @@ install: $(PROG)
 clean:
 	make -C libb $@
 	rm -f ${PROG} bcause-koi7 *.o *.a *.s *.nm *.dis *.trace
+	rm -rf build
 
 test:   all build
 	make -C build btest
