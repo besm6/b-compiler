@@ -136,6 +136,7 @@ TEST_F(besm6, libb_lchar)
         main() {
             auto str;
 
+            str = -1;
             lchar(&str, 0, 'f');
             lchar(&str, 1, 'u');
             lchar(&str, 2, 'b');
