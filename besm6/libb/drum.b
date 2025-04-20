@@ -6,14 +6,24 @@ initdrum()
     extrn flgex_;
     auto arg;
 
+    /* write assembly code to drum */
     arg = 030000;
     wbegin(0, &arg);
+
+    /* disable listing of Madlen code */
     write('**no li');
     write('st*n');
+
+    /* clear erroflg* */
+    write('**call ');
+    write('blocke');
+    write('rr*n');
+
+    /* invoke Madlen */
     write('**madle');
     write('n*n');
 
-    /* disable writlib* */
+    /* disable writlib* when translator finishes */
     flgex_ = 1;
 }
 
