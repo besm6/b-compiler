@@ -333,18 +333,18 @@ void B_FN(lchar)(B_TYPE string, B_TYPE i, B_TYPE chr)
 
 //
 // Select output stream for writeb().
-// In this version of libb this feature is ignored.
-// All output is sent to standard output, regardless of the value of fout.
 //
 B_TYPE fout = 0;
 
 //
-// One byte is written to the standard output.
+// One byte is written to the standard output (when fout is 1)
+// or to stderr (when fout is 0).
 //
 void B_FN(writeb)(B_TYPE k)
 {
-    /* note: fout is ignored */
-    syscall3(SYS_write, 1, (B_TYPE)&k, 1);
+    B_TYPE fd = fout ? 1 : 2;
+
+    syscall3(SYS_write, fd, (B_TYPE)&k, 1);
 }
 
 //
@@ -495,7 +495,8 @@ B_TYPE B_FN(read)(void)
 
 void B_FN(initdrum)(void)
 {
-    // Empty.
+    /* print assembly code to stdout */
+    fout = 1;
 }
 
 void B_FN(readdrum)(void)

@@ -33,7 +33,7 @@ std::string besm6::compile(const std::string &source_code)
 
     // Compile B source into assembly code.
     std::string result;
-    run_command(result, TEST_DIR "/../bbesm < " + b_filename);
+    run_command(result, TEST_DIR "/../bbesm < " + b_filename + " 2>&1");
 
     // Return output.
     return result;

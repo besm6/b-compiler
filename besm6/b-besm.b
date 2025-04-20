@@ -8,10 +8,9 @@
  */
 
 main() {
-  extrn symtab, eof, ns, fout, nerror;
+  extrn symtab, eof, ns, nerror;
 
   /* output assembly code to drum */
-  fout = 1;
   initdrum();
 
   while (!eof) {
