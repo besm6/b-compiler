@@ -5,9 +5,10 @@
 read() {
     /*
      * MONCARD* - array of 25 words, contains current input line.
+     * KCOUNT* - array of 23 words, contains position of standard input.
      */
-    extrn moncard_;
-    extrn read_idx, read_len;
+    extrn moncard_, kcount_;
+    extrn read_idx, read_len, read_ptr, read_dev;
     auto ch;
 
     if (read_idx == 0) {
@@ -33,6 +34,10 @@ done:
     }
 
     if (read_idx == read_len) {
+        /* Save read pointer for readdrum(). */
+        read_ptr = kcount_;
+        read_dev = 1[&kcount_];
+
         /* Read next line. */
         monread_();
         read_idx = 0;
@@ -53,3 +58,9 @@ read_idx;
  * Length of data in MONCARD* array.
  */
 read_len;
+
+/*
+ * Saved position of standard input.
+ */
+read_ptr;
+read_dev;

@@ -32,7 +32,7 @@ initdrum()
  */
 readdrum()
 {
-    extrn arread_, kcount_;
+    extrn arread_, kcount_, read_ptr, read_dev;
 
     /* finish writing assembly code */
     write('**read ');
@@ -40,8 +40,8 @@ readdrum()
     wriend();
 
     /* read from drum */
-    arread_ = kcount_;
-    1[&arread_] = 1[&kcount_];
+    arread_ = read_ptr;
+    1[&arread_] = read_dev;
 
     kcount_ = 0;
     1[&kcount_] = 010000000027777;
