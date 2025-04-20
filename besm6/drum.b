@@ -1,7 +1,7 @@
 /*
  * Initialize output to drum #3.
  */
-initdrum()
+init()
 {
     extrn fout, flgex_;
     auto arg;
@@ -35,7 +35,7 @@ initdrum()
 /*
  * Invoke assembler from drum.
  */
-readdrum()
+finish()
 {
     extrn fout, line, nerror, arread_, kcount_, read_ptr, read_dev;
 

@@ -493,13 +493,13 @@ B_TYPE B_FN(read)(void)
     return unicode_to_koi7(a);
 }
 
-void B_FN(initdrum)(void)
+void B_FN(init)(void)
 {
     /* print assembly code to stdout */
     fout = 1;
 }
 
-void B_FN(readdrum)(void)
+void B_FN(finish)(void)
 {
     // Empty.
 }

@@ -11,7 +11,7 @@ main() {
   extrn symtab, eof, ns, nerror;
 
   /* output assembly code to drum */
-  initdrum();
+  init();
 
   while (!eof) {
     ns = &symtab[51];
@@ -21,7 +21,7 @@ main() {
 
   if (!nerror) {
     /* invoke assembler */
-    readdrum();
+    finish();
   }
 }
 

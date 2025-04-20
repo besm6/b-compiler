@@ -10,8 +10,9 @@ tape.bin: mktape.dub source.txt libb.bin
 	rm -f $@
 	dubna mktape.dub > tape.lst
 
-source.txt: ../bbesm ../b-besm.b
+source.txt: ../bbesm ../b-besm.b ../drum.b
 	../bbesm < ../b-besm.b > $@
+	../bbesm < ../drum.b >> $@
 
 ../bbesm:
 	make -C .. all

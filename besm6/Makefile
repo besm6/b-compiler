@@ -1,5 +1,5 @@
 PROG    = bbesm
-CFLAGS  = -O -Wall -Werror -Wno-multichar
+CFLAGS  = -O -g -Wall -Werror -Wno-multichar
 
 .PHONY: all install clean test
 
