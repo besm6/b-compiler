@@ -1,4 +1,4 @@
-B_SOURCES = printd.b printo.b printf.b read.b write.b writeb.b flush.b
+B_SOURCES = printd.b printo.b printf.b read.b write.b writeb.b flush.b drum.b
 
 B_ASM = $(patsubst %.b,%.madlen,$(B_SOURCES))
 

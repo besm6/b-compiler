@@ -1,5 +1,5 @@
 //
-// Implement read(), write(c), flush().
+// Implement read(), write(c), printf().
 //
 #include <stdarg.h>
 #ifndef B_TYPE
@@ -332,15 +332,23 @@ void B_FN(lchar)(B_TYPE string, B_TYPE i, B_TYPE chr)
 }
 
 //
-// One byte is written on the standard output file.
+// Select output stream for writeb().
+// In this version of libb this feature is ignored.
+// All output is sent to standard output, regardless of the value of fout.
+//
+B_TYPE fout = 0;
+
+//
+// One byte is written to the standard output.
 //
 void B_FN(writeb)(B_TYPE k)
 {
+    /* note: fout is ignored */
     syscall3(SYS_write, 1, (B_TYPE)&k, 1);
 }
 
 //
-// One or more characters are written on the standard output file.
+// One or more characters are written to the standard output.
 //
 void B_FN(write)(B_TYPE c)
 {
@@ -444,11 +452,6 @@ end:
     va_end(ap);
 }
 
-void B_FN(flush)(void)
-{
-    // Empty.
-}
-
 //
 // The next character form the standard input file is returned.
 // The character ‘*e’ is returned for an end-of-file.
@@ -488,4 +491,14 @@ B_TYPE B_FN(read)(void)
     a = (a & 0x0f) << 12 | (b & 0x3f) << 6 | (c & 0x3f);
 //printf((B_TYPE)"<%c-%c>\n", a, unicode_to_koi7(a));
     return unicode_to_koi7(a);
+}
+
+void B_FN(initdrum)(void)
+{
+    // Empty.
+}
+
+void B_FN(readdrum)(void)
+{
+    // Empty.
 }

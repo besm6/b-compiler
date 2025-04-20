@@ -8,12 +8,21 @@
  */
 
 main() {
-  extrn symtab, eof, ns;
+  extrn symtab, eof, ns, fout, nerror;
+
+  /* output assembly code to drum */
+  initdrum();
+  fout = 1;
 
   while (!eof) {
     ns = &symtab[51];
     extdef();
     blkend();
+  }
+
+  if (!nerror) {
+    /* invoke assembler */
+    readdrum();
   }
 }
 
@@ -1305,14 +1314,19 @@ name(s) {
 }
 
 error(msg) {
-  extrn line, eof, nerror;
+  extrn line, eof, nerror, fout;
+  auto f;
 
   if (eof | nerror == 20) {
     eof = 1;
     return;
   }
-  ++nerror;
+  /* redirect to stdout */
+  f = fout;
+  fout = 0;
   printf("Error at line %d: %s*n", line, msg);
+  fout = f;
+  ++nerror;
 }
 
 /* storage */
