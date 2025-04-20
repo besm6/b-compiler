@@ -3,12 +3,18 @@
  */
 initdrum()
 {
+    extrn flgex_;
     auto arg;
 
     arg = 030000;
     wbegin(0, &arg);
-    write(0, '**madle');
-    write(0, 'n*n');
+    write('**no li');
+    write('st*n');
+    write('**madle');
+    write('n*n');
+
+    /* disable writlib* */
+    flgex_ = 1;
 }
 
 /*
@@ -19,8 +25,8 @@ readdrum()
     extrn arread_, kcount_;
 
     /* finish writing assembly code */
-    write(0, '**read ');
-    write(0, 'old*n');
+    write('**read ');
+    write('old*n');
     wriend();
 
     /* read from drum */

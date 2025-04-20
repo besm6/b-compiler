@@ -10,6 +10,8 @@ flush() {
             writeb(' ');
         }
         wrcard(0, out_buff);
+        writeb(0);
+        /* for debug: b$tout(out_buff); */
     } else {
         /* write to standard output */
         b$tout(out_buff);

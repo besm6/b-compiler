@@ -11,12 +11,13 @@ read() {
     auto ch;
 
     if (read_idx == 0) {
-        if (moncard_ == '**END F') {
+        ch = moncard_ >> 40;
+        if (ch == '**') {
             /* End of input data. */
             return (0);
         }
-        if (moncard_ == 0) {
-            /* No more input data. */
+        if (ch == 0) {
+            /* Bad input data. */
             return (0);
         }
 
