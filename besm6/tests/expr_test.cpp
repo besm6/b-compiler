@@ -558,7 +558,7 @@ TEST_F(besm6, local_vector)
     auto output = compile_and_run(R"(
         main() {
             auto a;
-            auto b 3;
+            auto b[3];
             auto c;
 
             b = &b + 1;
@@ -603,7 +603,7 @@ TEST_F(besm6, local_allocation)
         main() {
             auto p;
             auto a, b;
-            auto c 1;
+            auto c[1];
             auto d, e;
 
             p = &a;

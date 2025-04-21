@@ -648,7 +648,11 @@ declare(kw) {
       *csym = 5; /* auto */
       csym[1] = nauto;
       o = symbol();
-      if (o == 21) { /* number */
+      if (o == 4) { /* [ */
+        if ((o = symbol()) != 21) /* number */
+          goto syntax;
+        if ((o = symbol()) != 5) /* ] */
+          goto syntax;
         nauto = nauto + cval;
         o = symbol();
       }
@@ -660,7 +664,7 @@ declare(kw) {
 done:
   if (o == 1 & kw != 8 | o == 7 & kw == 8) /* auto/extrn ;  param ')' */
     return;
-
+syntax:
   error("Bad declaration syntax");
 }
 
