@@ -16,7 +16,6 @@ main() {
   while (!eof) {
     ns = &symtab[51];
     extdef();
-    blkend();
   }
 
   if (!nerror) {
@@ -329,8 +328,8 @@ mapch(c) {
 }
 
 expr(lev) {
-  extrn peeksym, csym, cval, isn, retflag, is_lvalue;
-  auto o, narg;
+  extrn peeksym, csym, cval, isn, retflag, is_lvalue, acc_active;
+  auto o, o1, o2, narg;
 
   retflag = 0;
   o = symbol();
@@ -353,8 +352,7 @@ case21:
         gen_subp();
       } else {
         *csym = 2; /* internal label */
-        csym[1] = isn;
-        isn = isn+1;
+        csym[1] = isn++;
       }
     }
     if (*csym == 5) { /* auto */
@@ -443,6 +441,26 @@ loop:
     expr(14);
     gen_rvalue();
     gen_assign();
+    goto loop;
+  }
+  if (lev >= 13 & o == 90) { /* ? */
+    gen_rvalue();
+    o1 = isn++;
+    jumpc(o1);
+    acc_active = 0;
+    expr(12);
+    o = symbol();
+    if (o == 8) { /* : */
+      o2 = isn++;
+      jump(o2);
+      label(o1);
+      acc_active = 0;
+      expr(13);
+      label(o2);
+    } else {
+      peeksym = o;
+      label(o1);
+    }
     goto loop;
   }
   if (lev >= 10 & o == 48) { /* | ^ */
@@ -838,14 +856,12 @@ next:
     if (cval == 12) { /* if */
       pexpr();
       gen_rvalue();
-      o1 = isn;
-      isn = isn+1;
+      o1 = isn++;
       jumpc(o1);
       stmt();
       o = symbol();
       if (o == 19 & cval == 14) { /* else */
-        o2 = isn;
-        isn = isn+1;
+        o2 = isn++;
         jump(o2);
         label(o1);
         stmt();
@@ -858,13 +874,11 @@ next:
     }
 
     if (cval == 13) { /* while */
-      o1 = isn;
-      isn = isn+1;
+      o1 = isn++;
       label(o1);
       pexpr();
       gen_rvalue();
-      o2 = isn;
-      isn = isn+1;
+      o2 = isn++;
       jumpc(o2);
       stmt();
       jump(o1);
@@ -880,8 +894,7 @@ next:
     peekc = 0;
     if (!*csym) {
       *csym = 2; /* internal label */
-      csym[1] = isn;
-      isn = isn+1;
+      csym[1] = isn++;
     } else if (*csym != 2) {
       error("Label redefined");
       printf("At name: ");
@@ -909,24 +922,6 @@ syntax:
 negate(n) {
   /* mantissa and sign, 41 bits */
   return (-n & 037777777777777);
-}
-
-blkend() {
-  extrn isn;
-  /* auto i; */
-
-  if (!isn)
-    return;
-  /* Table of labels is not needed for BESM-6.
-  write('1:');
-  i = 0;
-  while (i < isn) {
-    write('l');
-    number(i);
-    write('*n');
-    i = i+1;
-  } */
-  isn = 0;
 }
 
 assert_lvalue() {

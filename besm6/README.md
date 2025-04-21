@@ -11,7 +11,7 @@ Missing features:
  * `continue` statement
  * `for` statement
  * `switch` statement
- * Ternary operator `?:`
+ * Logical operators `&&` and `||`
  * Compound assignment operators `=+`, `=-`, `=*`, `=/`, `=%`, `=<<`, `=<=`, `=<`, `=>>`, `=>=`, `=>`, `=!=`, `===`, `=&`, `=|`
  * Hexadecimal literals
  * Format `%x` in `printf()`

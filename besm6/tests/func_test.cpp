@@ -70,14 +70,12 @@ TEST_F(besm6, function_arguments)
 //
 // Ternary operator ?: is not supported by PDP-7 version of B compiler.
 //
-TEST_F(besm6, DISABLED_function_ternary_operator)
+TEST_F(besm6, ternary_operator)
 {
     auto output = compile_and_run(R"(
-        choose(a, b, c)
-        {
+        choose(a, b, c) {
             return (a ? b : c);
         }
-
         main() {
             printf("%d*n", choose(1, 123, 456));
             printf("%d*n", choose(0, 123, 456));
