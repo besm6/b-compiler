@@ -14,5 +14,5 @@ Here you can find a B compiler for BESM-6 machine.
 
 To build this software, the following packages should be pre-installed:
 
- * dubna
- * besmc
+ * [dubna](https://github.com/besm6/dubna)
+ * [besmc](https://github.com/besm6/besmc)
