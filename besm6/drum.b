@@ -15,18 +15,11 @@ init()
     arg = 030000;
     wbegin(0, &arg);
 
-    /* disable listing of Madlen code */
-    write('**no li');
-    write('st*n');
-
     /* clear erroflg* */
-    write('**call ');
-    write('blocke');
-    write('rr*n');
+    printf("**call blockerr*n");
 
-    /* invoke Madlen */
-    write('**madle');
-    write('n*n');
+    /* invoke Madlen, disable listing */
+    printf("**madlen,L=0*n");
 
     /* disable writlib* when translator finishes */
     flgex_ = 1;
@@ -40,8 +33,7 @@ finish()
     extrn fout, line, nerror, arread_, kcount_, read_ptr, read_dev;
 
     /* finish writing assembly code */
-    write('**read ');
-    write('old*n');
+    printf("**read old*n");
     wriend();
 
     /* print to stdout */
