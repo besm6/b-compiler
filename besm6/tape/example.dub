@@ -4,7 +4,7 @@
 *library: 40
 *trans-main: 40020
 main() {
-    write('Hello,');
-    write(' B!*n');
+    printf("Hello, B!*n");
 }
+*execute
 *end file

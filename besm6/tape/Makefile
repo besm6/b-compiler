@@ -1,7 +1,7 @@
 TAPE    = b.7
 
 all:    tape.bin
-	mv $< $(TAPE)
+	cp $< $(TAPE)
 
 clean:
 	rm -f $(TAPE) *.bin source.txt *.lst
