@@ -3,7 +3,7 @@
  */
 init()
 {
-    extrn fout, flgex_;
+    extrn fout, flgex_, flags;
     auto arg;
 
     /* print to stdout */
@@ -18,8 +18,14 @@ init()
     /* clear erroflg* */
     printf("**call blockerr*n");
 
-    /* invoke Madlen, disable listing */
-    printf("**madlen,L=0*n");
+    /* invoke Madlen */
+    if (flags & 4) {
+        /* full list */
+        printf("**madlen*n");
+    } else {
+        /* disable listing */
+        printf("**madlen,L=0*n");
+    }
 
     /* disable writlib* when translator finishes */
     flgex_ = 1;
