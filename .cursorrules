@@ -1,0 +1,4 @@
+Before working in this repository, read `CLAUDE.md` and follow its project guidance.
+
+Treat `CLAUDE.md` as the source of truth for build/test commands, architecture notes,
+design constraints, and repository-specific conventions.
