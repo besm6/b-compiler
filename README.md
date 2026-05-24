@@ -2,7 +2,7 @@
 
 This repository contains compilers for the **B programming language** — the direct predecessor to C, created by Ken Thompson and Dennis Ritchie at Bell Labs in 1969. Two compilers are provided:
 
-* **BCause** (`intel64/`) — runs B programs on modern x86-64 Linux.
+* **BCause** (`intel64/`) — runs B programs on modern x86-64 Linux and macOS.
 * **bbesm** (`besm6/`) — runs B programs on the BESM-6, a Soviet mainframe computer (via the [Dubna](https://github.com/besm6/dubna) emulator).
 
 ## What is the B language?
@@ -16,11 +16,17 @@ Good starting points for learning B:
 
 ## BCause — B for modern Linux (`intel64/`)
 
-BCause is a small, single-pass compiler (~2000 lines of C99). It translates B source files to x86-64 assembly, then calls the standard GNU assembler (`as`) and linker (`ld`) to produce a standalone binary.
+BCause is a small, single-pass compiler (~2000 lines of C99). It translates B source files to x86-64 assembly, then calls the system assembler (`as`) and linker (`ld`) to produce a standalone binary. On Linux the GNU toolchain is used; on macOS the Apple toolchain is used.
 
 ### Prerequisites
 
-A standard Linux C toolchain: `gcc` (or any C99 compiler), `make`, `binutils` (`as` and `ld`). These are available on any typical Linux distribution.
+**Linux:** a standard C toolchain — `gcc` (or any C99 compiler), `make`, and `binutils` (`as` and `ld`). Available on any typical Linux distribution.
+
+**macOS:** Xcode Command Line Tools, which provide `cc`, `make`, `as`, and Apple `ld`. Install with:
+
+```sh
+xcode-select --install
+```
 
 ### Build
 

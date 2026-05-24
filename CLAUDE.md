@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains two B programming language compilers:
 
-1. **`intel64/`** — *BCause*: A B compiler targeting x86_64 Linux, written in ~2000 lines of C99. Produces statically linked binaries via GNU `as` + `ld`.
+1. **`intel64/`** — *BCause*: A B compiler targeting x86_64 Linux and macOS, written in ~2000 lines of C99. Produces statically linked binaries via `as` + `ld` (GNU on Linux, Apple on macOS).
 2. **`besm6/`** — A B compiler targeting the BESM-6 Soviet mainframe, written in B itself. Bootstrapped via a KOI-7 variant of BCause.
 
 The `pdp7/` directory holds a historical reference implementation. The `examples/` directory has sample B programs.
@@ -71,7 +71,7 @@ Entry point: `main.c` → parses CLI flags, fills `struct compiler_args`, calls 
 
 After all declarations are parsed, `strings()` emits the `.rodata` section.
 
-The compile pipeline after code gen: invokes GNU `as` to assemble the `.s` file, then GNU `ld` (static, `-nostdlib`) to link against `libb.a`.
+The compile pipeline after code gen: invokes `as` to assemble the `.s` file, then `ld` (static) to link against `libb.a`. On Linux the GNU assembler/linker are used (`-nostdlib`); on macOS the Apple toolchain is used with `-e _start`.
 
 **`compiler_args`** (defined in `compiler.h`) is the central state struct passed everywhere:
 - `locals` / `extrns` — `struct list` dynamic arrays tracking variables in scope
@@ -80,7 +80,7 @@ The compile pipeline after code gen: invokes GNU `as` to assemble the `.s` file,
 
 **`list.c` / `list.h`** — simple generic dynamic array (`list_push`, `list_clear`, `list_free`).
 
-**`libb.c`** — B standard library (`_start`, `read`, `write`, `writeb`, `printf`, `printd`, `printo`, `char`, `lchar`, `nread`, `nwrite`, `flush`, `exit`). Implemented via raw Linux syscalls using inline assembly — no libc dependency. Macros `B_TYPE` and `B_FN` allow customization.
+**`libb.c`** — B standard library (`_start`, `read`, `write`, `writeb`, `printf`, `printd`, `printo`, `char`, `lchar`, `nread`, `nwrite`, `flush`, `exit`). Implemented via raw syscalls (Linux or macOS BSD) using inline assembly — no libc dependency. Macros `B_TYPE` and `B_FN` allow customization.
 
 ### KOI-7 Variant
 

@@ -19,31 +19,37 @@ BCause is implemented as a small single-pass compiler in ~2000 lines of pure C99
 
 ### Compatibility
 
-Due to BCause's simplicity, only **`gnu-linux-x86_64`**-systems are supported.
+BCause supports **x86-64 Linux** and **macOS** (x86-64).
 
-- If your system can run *GNU-`make`*, *GNU-`ld`* and *GNU-`as`*, BCause itself should be able to work.
-- Because of the reliance on system-calls `libb.a` has to be implemented for each system separately.
+| Platform | Assembler / Linker | Notes |
+| -------- | ------------------ | ----- |
+| Linux x86-64 | GNU `as` + GNU `ld` | Any distro with `binutils` |
+| macOS x86-64 | Apple `as` + Apple `ld` | Requires Xcode Command Line Tools |
 
-> **Note**
-> Feel free to submit pull requests to provide more OS support and fix bugs.
+Because `libb.a` uses raw syscalls, it must be compiled for the target OS. The Makefile handles this automatically.
 
 ### Installation
 
-To install BCause, first clone this repository:
-```console
-$ git clone https://github.com/spydr06/bcause.git
-$ cd ./bcause
+#### Prerequisites
+
+- *Linux:* `gcc` (or any C99 compiler), `make`, `binutils`
+- *macOS:* Xcode Command Line Tools — `xcode-select --install`
+
+#### Build
+
+```sh
+cd intel64
+make
 ```
-Then, build the project:
-```console
-$ make
+
+To install BCause globally:
+
+```sh
+sudo make install
 ```
-To install BCause on your computer globally, use:
-```console
-# make install
-```
+
 > **Warning**
-> this requires root privileges and modifies system files
+> This requires root/sudo privileges and copies files to `/usr/local`.
 
 ### Usage
 
