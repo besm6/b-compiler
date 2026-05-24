@@ -1,6 +1,14 @@
 PROG    = bbesm
 CFLAGS  = -O -g -Wall -Werror -Wno-multichar
 
+# On macOS the compiler inserts stack-protection stubs that reference
+# __stack_chk_guard/__stack_chk_fail from libSystem.  Since B programs are
+# linked statically without libSystem, disable SSP for the runtime library.
+uname_s := $(shell uname -s)
+ifeq ($(uname_s),Darwin)
+CFLAGS_EXTRA = -fno-stack-protector
+endif
+
 .PHONY: all install clean test
 
 all:    $(PROG)
@@ -40,6 +48,6 @@ bcause-koi7: $(BCAUSE_SRC)
 # Functions writeb() converts from KOI-7 to UTF-8.
 #
 libb.a: libb.c
-	${CC} ${CFLAGS} -ffreestanding -c $<
+	${CC} ${CFLAGS} ${CFLAGS_EXTRA} -ffreestanding -c $<
 	ar r $@ libb.o
 	ranlib $@

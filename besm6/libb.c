@@ -293,9 +293,15 @@ static inline SYSCALL_TYPE syscall3(SYSCALL_TYPE n, SYSCALL_TYPE a1, SYSCALL_TYP
 }
 
 /* syscall ids */
-#define SYS_read 0
-#define SYS_write 1
-#define SYS_exit 60
+#ifdef __APPLE__
+#  define SYS_read  (0x2000000 + 3)
+#  define SYS_write (0x2000000 + 4)
+#  define SYS_exit  (0x2000000 + 1)
+#else
+#  define SYS_read  0
+#  define SYS_write 1
+#  define SYS_exit  60
+#endif
 
 //
 // B standard library implementation
