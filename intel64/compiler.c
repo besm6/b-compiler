@@ -15,6 +15,17 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+/* macOS (Mach-O) requires a leading underscore on global C symbols,
+ * has no ELF .type directive, and uses a different section name for
+ * read-only data. */
+#ifdef __APPLE__
+#  define SYM_PREFIX        "_"
+#  define RODATA_SECTION    ".section __TEXT,__const\n"
+#else
+#  define SYM_PREFIX        ""
+#  define RODATA_SECTION    ".section .rodata\n"
+#endif
+
 #define ASSERT_CHAR(args, in, expect, ...) do {     \
     char _c;                                        \
     if ((_c = fgetc(in)) != expect) {               \
@@ -215,12 +226,24 @@ int compile(struct compiler_args *args)
     if (args->do_linking) {
         if ((exit_code = subprocess(args->arg0, "ld", (char *const[]){
             "ld",
+#ifdef __APPLE__
+            /* Apple ld: no -nostdlib (unrecognised); omitting -lSystem is enough.
+             * -e specifies the entry point for the static executable. */
+            "-static",
+            "-e", "_start",
+            obj_file,
+            args->lib_dir,
+            "-L/usr/local/lib",
+            "-lb",
+            "-o", args->output_file,
+#else
             "-static", "-nostdlib",
             obj_file,
             args->lib_dir, "-L/lib64", "-L/usr/local/lib",
             "-lb",
             "-o", args->output_file,
             "-z", "noexecstack",
+#endif
             0
         }))) {
             eprintf(args->arg0, "error running linker (exit code %d)\n", exit_code);
@@ -516,7 +539,7 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
             eprintf(args->arg0, "unexpected end of file, expect ival\n");
             exit(1);
         }
-        fprintf(out, "  .quad %s\n", buffer);
+        fprintf(out, "  .quad " SYM_PREFIX "%s\n", buffer);
     }
     else if (c == '\'') {
         if ((value = character(args, in)) == EOF) {
@@ -552,13 +575,22 @@ static void ival(struct compiler_args *args, FILE *in, FILE *out)
 //
 static void global(struct compiler_args *args, FILE *in, FILE *out, char *identifier)
 {
+#ifdef __APPLE__
+    fprintf(out,
+        ".data\n"
+        ".balign %d\n"
+        SYM_PREFIX "%s:\n",
+        args->word_size, identifier
+    );
+#else
     fprintf(out,
         ".data\n"
         ".type %s, @object\n"
-        ".align %d\n"
+        ".balign %d\n"
         "%s:\n",
         identifier, args->word_size, identifier
     );
+#endif
 
     int c;
     if ((c = fgetc(in)) != ';') {
@@ -603,13 +635,23 @@ static void vector(struct compiler_args *args, FILE *in, FILE *out, char *identi
         }
     }
 
+#ifdef __APPLE__
+    fprintf(out,
+        ".data\n"
+        ".balign %d\n"
+        SYM_PREFIX "%s:\n"
+        "  .quad .+8\n",
+        args->word_size, identifier
+    );
+#else
     fprintf(out,
         ".data\n.type %s, @object\n"
-        ".align %d\n"
+        ".balign %d\n"
         "%s:\n"
         "  .quad .+8\n",
         identifier, args->word_size, identifier
     );
+#endif
 
     whitespace(args, in);
 
@@ -709,7 +751,9 @@ static bool postfix(struct compiler_args *args, FILE *in, FILE *out, bool is_lva
         while (num_args > 0)
             fprintf(out, "  pop %s\n", arg_registers[--num_args]);
 
-        fprintf(out, "  pop %%r10\n  call *%%r10\n");
+        /* Per x86-64 SysV ABI, %al must hold the number of FP arguments
+         * for variadic calls; B has no floats, so it is always 0. */
+        fprintf(out, "  pop %%r10\n  xor %%rax, %%rax\n  call *%%r10\n");
         is_lvalue = false;
         break;
 
@@ -874,7 +918,7 @@ static bool term(struct compiler_args *args, FILE *in, FILE *out)
             }
 
             if (is_extrn)
-                fprintf(out, "  lea %s(%%rip), %%rax\n", buffer);
+                fprintf(out, "  lea " SYM_PREFIX "%s(%%rip), %%rax\n", buffer);
             else
                 fprintf(out, "  lea -%lu(%%rbp), %%rax\n", (value + 2) * args->word_size);
 
@@ -1586,6 +1630,16 @@ static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_i
     // Add name of the function to externals.
     list_push(&args->extrns, fn_id);
 
+#ifdef __APPLE__
+    fprintf(out,
+        ".text\n"
+        SYM_PREFIX "%s:\n"
+        "  push %%rbp\n"
+        "  mov %%rsp, %%rbp\n"
+        "  sub $%d, %%rsp\n",
+        fn_id, args->word_size
+    );
+#else
     fprintf(out,
         ".text\n"
         ".type %s, @function\n"
@@ -1595,6 +1649,7 @@ static void function(struct compiler_args *args, FILE *in, FILE *out, char *fn_i
         "  sub $%d, %%rsp\n",
         fn_id, fn_id, args->word_size
     );
+#endif
 
     if ((c = fgetc(in)) != ')') {
         ungetc(c, in);
@@ -1621,7 +1676,7 @@ static void strings(struct compiler_args *args, FILE *out)
     char *string;
     size_t i, j, size;
 
-    fprintf(out, ".section .rodata\n");
+    fprintf(out, RODATA_SECTION);
 
     for (i = 0; i < args->strings.size; i++) {
         fprintf(out, ".string.%lu:\n", i);
@@ -1651,7 +1706,7 @@ static void declarations(struct compiler_args *args, FILE *in, FILE *out)
     size_t i;
 
     while (identifier(args, in, buffer)) {
-        fprintf(out, ".globl %s\n", buffer);
+        fprintf(out, ".globl " SYM_PREFIX "%s\n", buffer);
 
         switch (c = fgetc(in)) {
         case '(':

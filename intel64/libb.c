@@ -37,28 +37,54 @@ static inline SYSCALL_TYPE syscall3(SYSCALL_TYPE n, SYSCALL_TYPE a1, SYSCALL_TYP
 }
 
 /* syscall ids */
-#define SYS_read 0
-#define SYS_write 1
-#define SYS_open 2
-#define SYS_close 3
-#define SYS_stat 4
-#define SYS_fstat 5
-#define SYS_seek 8
-#define SYS_fork 57
-#define SYS_execve 59
-#define SYS_exit 60
-#define SYS_wait4 61
-#define SYS_chdir 80
-#define SYS_mkdir 83
-#define SYS_creat 85
-#define SYS_link 86
-#define SYS_unlink 87
-#define SYS_chmod 90
-#define SYS_chown 92
-#define SYS_gettimeofday 96
-#define SYS_getuid 102
-#define SYS_setuid 105
-#define SYS_time 201
+#ifdef __APPLE__
+#  define SYS_BASE         0x2000000
+#  define SYS_read         (SYS_BASE + 3)
+#  define SYS_write        (SYS_BASE + 4)
+#  define SYS_open         (SYS_BASE + 5)
+#  define SYS_close        (SYS_BASE + 6)
+#  define SYS_stat         (SYS_BASE + 188) /* stat64 */
+#  define SYS_fstat        (SYS_BASE + 189) /* fstat64 */
+#  define SYS_seek         (SYS_BASE + 199) /* lseek */
+#  define SYS_fork         (SYS_BASE + 2)
+#  define SYS_execve       (SYS_BASE + 59)
+#  define SYS_exit         (SYS_BASE + 1)
+#  define SYS_wait4        (SYS_BASE + 7)
+#  define SYS_chdir        (SYS_BASE + 12)
+#  define SYS_mkdir        (SYS_BASE + 136)
+#  define SYS_creat        (SYS_BASE + 8)
+#  define SYS_link         (SYS_BASE + 9)
+#  define SYS_unlink       (SYS_BASE + 10)
+#  define SYS_chmod        (SYS_BASE + 15)
+#  define SYS_chown        (SYS_BASE + 16)
+#  define SYS_gettimeofday (SYS_BASE + 116)
+#  define SYS_getuid       (SYS_BASE + 24)
+#  define SYS_setuid       (SYS_BASE + 23)
+#  define SYS_time         (SYS_BASE + 232)
+#else
+#  define SYS_read         0
+#  define SYS_write        1
+#  define SYS_open         2
+#  define SYS_close        3
+#  define SYS_stat         4
+#  define SYS_fstat        5
+#  define SYS_seek         8
+#  define SYS_fork         57
+#  define SYS_execve       59
+#  define SYS_exit         60
+#  define SYS_wait4        61
+#  define SYS_chdir        80
+#  define SYS_mkdir        83
+#  define SYS_creat        85
+#  define SYS_link         86
+#  define SYS_unlink       87
+#  define SYS_chmod        90
+#  define SYS_chown        92
+#  define SYS_gettimeofday 96
+#  define SYS_getuid       102
+#  define SYS_setuid       105
+#  define SYS_time         201
+#endif
 
 //
 // B standard library implementation
@@ -79,8 +105,14 @@ void B_FN(exit)(void) {
     syscall1(SYS_exit, 0);
 }
 
-/* The i-th character of the string is returned */
-B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) __asm__ ("char"); /* alias name */
+/* The i-th character of the string is returned.
+ * The B name "char" is a C keyword, so the assembly symbol is set explicitly.
+ * On macOS all global symbols carry a leading underscore. */
+#ifdef __APPLE__
+B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) __asm__ ("_char");
+#else
+B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) __asm__ ("char");
+#endif
 B_TYPE B_FN(_char)(B_TYPE string, B_TYPE i) {
     return ((char*) string)[i];
 }

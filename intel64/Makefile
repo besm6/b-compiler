@@ -3,6 +3,14 @@ SRC     = compiler.c list.c main.c
 LIB     = libb.a
 CFLAGS  = -O -g -Wall -Wextra -Wshadow
 
+# On macOS the compiler inserts stack-protection stubs that reference
+# __stack_chk_guard/__stack_chk_fail from libSystem.  Since B programs are
+# linked statically without libSystem, disable SSP for the runtime library.
+uname_s := $(shell uname -s)
+ifeq ($(uname_s),Darwin)
+LIBB_EXTRA = -fno-stack-protector
+endif
+
 .PHONY: all install clean
 
 all: ${PROG} ${LIB}
@@ -26,6 +34,6 @@ ${PROG}: ${SRC}
 	${CC} ${CFLAGS} ${SRC} -o $@
 
 ${LIB}: libb.c
-	${CC} ${CFLAGS} -ffreestanding -c $<
+	${CC} ${CFLAGS} -ffreestanding ${LIBB_EXTRA} -c $<
 	ar r $@ libb.o
 	ranlib $@
