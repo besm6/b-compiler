@@ -93,7 +93,7 @@ Compiling with `-DKOI7` enables the `ascii_to_koi7()` function that translates A
 - r14 = negative count of arguments, r13 = return address
 - `b/save` / `b/ret` routines manage frame setup/teardown
 
-`besm6/libb/` contains the runtime library implemented in Madlen assembly (`.madlen` files) for operations like `b_mul`, `b_div`, comparisons, and I/O, plus B-language source for `printf`, `read`, `writeb`, etc.
+`besm6/libb/` contains the runtime library: hand-written Madlen assembly (`.madlen`) for the calling convention helpers (`b/save`, `b/ret`), arithmetic and relational operators (`b/mul`, `b/div`, comparisons, etc.), and character access (`char`, `lchar`); plus B-language source for `printf`, `read`, `writeb`, `flush`, etc. (compiled to `.madlen` by `bbesm` at build time). See `besm6/libb/README.md` for a function index and `doc/B-Runtime-Library.md` for a comprehensive reference.
 
 ## B Language Notes
 

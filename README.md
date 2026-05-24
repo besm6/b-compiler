@@ -131,6 +131,7 @@ bcause ../examples/hello.b -o hello
 
 ## Documentation
 
+* [B Runtime Library for BESM-6](doc/B-Runtime-Library.md) — comprehensive reference for all routines in `besm6/libb/`
 * [Calling conventions](doc/Besm6-Calling-Conventions.md) for BESM-6
 * [User's Reference to B](doc/kbman.pdf) by K. Thompson
 * [A Tutorial Introduction to The Language B](doc/btut.pdf) by B. W. Kernighan
